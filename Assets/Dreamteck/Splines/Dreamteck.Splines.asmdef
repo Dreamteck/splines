@@ -1,0 +1,14 @@
+{
+    "name": "Dreamteck.Splines",
+    "references": [
+        "Dreamteck.Utilities"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

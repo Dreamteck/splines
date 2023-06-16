@@ -1,0 +1,96 @@
+----- 3.0.5 -----
+UX: Improved the Move tool UX in Bezier mode when a single point is selected. Clicking the inner point handle will toggle the tool for the point position and clicking the outer handle will toggle the tool for the tangents
+
+FIX: Fixed the empty sample array error in SplineUser
+FIX: Fixed the SplineFollower speed and direction inconsistencies
+FIX: Fixed the bug where Spline Followers in Ping-Pong mode sometimes looped
+FIX: Fixed the editor hang when setting a zero Z scale in the Spline Mesh's Mesh configuration window
+FIX: Switching to and from 2D mode for the splines now has a proper Undo
+FIX: Fixed the incorrect automatic count for Spline Meshes when used with looped samples
+FIX: Fixed a niche editor NullReference Exception when destroying a spline computer through a script
+FIX: Fixed the SplineFollower and SplinePositioner onNodes event not being triggered when SetPercent or SetDistance is called
+FIX: Fixed the ParticleController bug when it was trying to set data for already destroyed particles
+FIX: "Start in Creation Mode" preference is now properly saved
+FIX: Fixed computation of sample directions if the SplineComputer component's transform has a negative scale
+FIX: Fixed incorrect behavior of SplinePositioner.SetPercent when mode is set to Distance, and SplinePositioner.SetDistance when mode is set to Percent
+FIX: Fixed MeshGenerator baking removing the generated mesh object if the object is child of the SplineComputer it references
+FIX: Fixed the NullReference exception when baking meshes with the Save To File option
+FIX: Fixed Insert point creation mode offsetting the last point of the spline when the point is inserted before the last point
+
+
+----- 3.0.4 -----
+FIX: Trigger positions are now preserved when spline points are added / removed in the editor
+FIX: Fixed Spline Tracer objects going to origin if their spline doesn't have samples
+FIX: Fixed disappearing samples in Optimized spline mode
+FIX: Improved the Optimized sample mode to respect the spline object transform scale in Local space mode
+FIX: Fixed an issue where using the delete point tool clears the spline samples
+FIX: Fixed spline samples clearing when using the right click + left click shortcut to exit point creation mode
+FIX: Fixed disconnecting nodes when using the Insert point method
+
+
+----- 3.0.3 -----
+FIX: Fixed the create point tool when drag-clicking Bezier points. It now properly sets the tangents.
+FIX: Fixed an issue with the SplineRenderer throwing NullReferenceExceptions
+FIX: Fixed TextMeshProController not properly updating the Canvas (when working with UGUI) 
+FIX: Fixed errors when the Spline Computer is in Optimized, Linear mode and it only has two control points
+
+----- 3.0.2 -----
+FIX: Fixed the spline primitives in the editor
+FIX: Fixed the misalignment of point sizes and point normals 
+
+
+----- 3.0.1 -----
+FIX: Backwards compatibility fix for projects with Dreamteck Splines 2
+
+----- 3.0.0 -----
+
+FEATURE: Support for Text Mesh Pro!
+FEATURE: Added Catmull Rom Spline parametrization - Uniform, Centripetal and Chordal splines with the move of a slider
+FEATURE: Added a "Draw Transform Pivot" option in the Editor properties of the Spline Computer
+FEATURE: Added a feature to compensate for tight corners when under the "Common" foldout of the mesh generators
+FEATURE: Added a Catenary Tool to generate sagging cables in Window/Dreamteck/Splines/Tools
+FEATURE: Added Node buttons inside the Spline Computer point editing panel in the inspector to easily create and delete nodes for each point
+FEATURE: Added a "Mode" property to the follower speed modifiers which allows switch between addition and multiplication
+FEATURE: The Spline Follower now supports negative speed which will make it go backwards - easier than setting the direction property
+FEATURE: Added a "Rotate Degrees" normal operation wich allows the user to rotate spline normals with specific degrees
+FEATURE: Added a "Use Clipped Percents" property to the sample modifiers to make them move with the clip range instead of being global
+FEATURE: Added a "Sideways UV Rotation" property to the Surface Generator to rotate the UVS of the side walls when extruded
+FEATURE: Added a follow target feature to the spline positioner. The spline positioner can now be attached to another spline tracer
+
+FIX: Substantially reduced the Spline Mesh component's garbage generation
+FIX: The Spline Positioner now calls onNode when being moved and a node is passed
+FIX: Numerous runtime performance improvements
+FIX: Editor performance improvements
+FIX: Performance improvements when working with prefabs
+FIX: Stability improvements when working with prefabs
+FIX: Calling SplineComputer.SetPointPosition now properly handles the point tangents
+FIX: Fixed the behavior of duplicating spline objects where sometimes the duplicated object will get affected when the original is edited
+FIX: Setting applyPosition and applyRotation of the SplineTracer motion property now works properly in 2D mode
+FIX: Fixed IndexOutOfRange exception when using a TubeGenerator with caps and there are no samples in the spline
+FIX: Fixed an issue with SplineUser.Evaluate returning wrong results when the clip range is different than [0-1]
+FIX: Reduced the amount of serialization for spline objects and memory footprint - scene sizes will be smaller
+FIX: Fixed the serialization of sample modifiers inside the SplineUsers 
+FIX: Fixed the blend value of sample modifiers - it works properly for all kinds of modifiers now
+FIX: Improved the Particle Controller's birth detection logic
+FIX: Fixed the point normal editing tool when working with B-Splines
+FIX: Fixed an issue where sometimes spline objects were not being initialized properly in the scenes unless selected
+FIX: Nodes are no longer set dirty upon just selecting them in the editor
+FIX: The Node editor now properly draws the scene handles (regression fix)
+FIX: Fixed the Spline Follower's speed regions not matching the clip range if the clip range is different than 0-1
+FIX: Fixed a core fault in SplineComputer.CalculateSamples()
+FIX: Fixed an issue with the UV rotation of the Surface Generator not working
+FIX: The EdgeColliderGenerator's offset property is now exposed in the editor
+FIX: Mesh generators are now properly marked as dirty if the bake option is used
+FIX: Fixed the Waveform Generator to make proper use of the sample modifiers
+
+CHANGE: The "Vertices" foldout of the Mesh Generator components has been renamed to "Common"
+CHANGE: Removed the rebuildOnAwake property from the SplineComputer - splines are now handles automatically when instantiated in runtime
+CHANGE: Closing a spline now bridges the gap between the first and last points instead of bringing both points together
+
+API: Added the SplineUtility static class. It provides useful methods like merging
+API: The Evaluate method should now be called with the "ref" keyword. Example: spline.Evaluate(0.5, ref sample);
+API: Added wrapper methods for adding and getting triggers and trigger groups from a Spline Computer (see documentation)
+API: Added RemoveListener and RemoveAllListeners methods to the SplineTrigger class
+API: Removed the onUserCross event from SplineTrigger. The onCrossEvent now passes a reference to the user by default
+
+SUPPORT: Official Unity 2022 Support
