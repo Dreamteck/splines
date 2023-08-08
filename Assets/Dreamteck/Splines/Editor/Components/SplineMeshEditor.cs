@@ -113,7 +113,12 @@ namespace Dreamteck.Splines.Editor
             base.BodyGUI();
 
             SplineMesh user = (SplineMesh)target;
+            SerializedProperty compensateCorners = serializedObject.FindProperty("_compensateCorners");
             EditorGUI.BeginChangeCheck();
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Geometry", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(compensateCorners, new GUIContent("Compensate Corners"));
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Uv Coordinates", EditorStyles.boldLabel);

@@ -10,6 +10,24 @@ namespace Dreamteck.Splines
     [AddComponentMenu("Dreamteck/Splines/Users/Spline Mesh")]
     public partial class SplineMesh : MeshGenerator
     {
+        public bool compensateCorners
+        {
+            get { return _compensateCorners; }
+            set
+            {
+                if (value != _compensateCorners)
+                {
+                    _compensateCorners = value;
+                    Rebuild();
+                }
+            }
+        }
+
+        [SerializeField]
+        [HideInInspector]
+        [Tooltip("This will inflate sample sizes based on the angle between two samples in order to preserve geometry width")]
+        private bool _compensateCorners = false;
+
         //Mesh data
         [SerializeField]
         [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("channels")]
@@ -22,6 +40,8 @@ namespace Dreamteck.Splines
         private Matrix4x4 _vertexMatrix = new Matrix4x4();
         private Matrix4x4 _normalMatrix = new Matrix4x4();
         private SplineSample _lastResult = new SplineSample(), _modifiedResult = new SplineSample();
+        private SplineSample[] _samples;
+        private SplineSample _prev, _next;
 
         protected override void Awake()
         {
@@ -151,6 +171,9 @@ namespace Dreamteck.Splines
                 switch (_channels[i].type)
                 {
                     case Channel.Type.Extrude:
+                        _samples = spline.rawSamples;
+                        _prev = _samples[0];
+                        _next = _samples[1];
                         for (int j = 0; j < _channels[i].count; j++)
                         {
                             double from = DMath.Lerp(_channels[i].clipFrom, _channels[i].clipTo, j * step + space);
@@ -251,15 +274,35 @@ namespace Dreamteck.Splines
 
             for (int i = 0; i < definition.vertexGroups.Count; i++)
             {
+                double percent = DMath.Lerp(from, to, definition.vertexGroups[i].percent);
                 if (_useLastResult && i == definition.vertexGroups.Count)
                 {
                     evalResult = _lastResult;
                 }
                 else
                 {
-                    Evaluate(DMath.Lerp(from, to, definition.vertexGroups[i].percent), ref evalResult);
+                    Evaluate(percent, ref evalResult);
                 }
                 ModifySample(ref evalResult, ref _modifiedResult);
+
+                if (_compensateCorners)
+                {
+                    percent = UnclipPercent(percent);
+                    int s;
+                    for (s = 1; s < _samples.Length; s++)
+                    {
+                        if (_samples[s].percent >= percent)
+                        {
+                            _prev = _samples[s - 1];
+                            _next = _samples[s];
+                            break;
+                        }
+                    }
+                    Vector3 direction = (_next.position - _prev.position).normalized;
+                    float angle = Vector3.Angle(direction, _modifiedResult.forward) * 2f;
+                    _modifiedResult.size *= 1 / Mathf.Sqrt(Mathf.Cos(angle * Mathf.Deg2Rad) * 0.5f + 0.5f);
+                }
+
                 Vector3 originalNormal = _modifiedResult.up;
                 Vector3 originalRight = _modifiedResult.right;
                 Vector3 originalDirection = _modifiedResult.forward;
