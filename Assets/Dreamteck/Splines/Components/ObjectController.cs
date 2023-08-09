@@ -63,6 +63,7 @@ namespace Dreamteck.Splines
 
         }
 
+        public enum SpawnMethod { Count, Points }
         public enum ObjectMethod { Instantiate, GetChildren }
         public enum Positioning { Stretch, Clip }
         public enum Iteration { Ordered, Random }
@@ -84,6 +85,19 @@ namespace Dreamteck.Splines
                         Spawn();
                     }
                     else _objectMethod = value;
+                }
+            }
+        }
+
+        public SpawnMethod spawnMethod
+        {
+            get { return _spawnMethod; }
+            set
+            {
+                if (value != _spawnMethod)
+                {
+                    _spawnMethod = value;
+                    Rebuild();
                 }
             }
         }
@@ -422,6 +436,9 @@ namespace Dreamteck.Splines
         private float _evaluateOffset = 0f;
         [SerializeField]
         [HideInInspector]
+        private SpawnMethod _spawnMethod = SpawnMethod.Count;
+        [SerializeField]
+        [HideInInspector]
         private int _spawnCount = 0;
 #if UNITY_EDITOR
         [SerializeField]
@@ -485,6 +502,9 @@ namespace Dreamteck.Splines
         private int lastChildCount = 0;
         [SerializeField]
         [HideInInspector]
+        private float lastPointCount = 0;
+        [SerializeField]
+        [HideInInspector]
         private ObjectControl[] spawned = new ObjectControl[0];
         [SerializeField]
         [HideInInspector]
@@ -495,7 +515,7 @@ namespace Dreamteck.Splines
         [SerializeField]
         [HideInInspector]
         private float _maxObjectDistance = 0f;
-
+        
         [SerializeField]
         [HideInInspector]
         private ObjectControllerCustomRuleBase _customOffsetRule;
@@ -509,6 +529,18 @@ namespace Dreamteck.Splines
         private ObjectControllerCustomRuleBase _customScaleRule;
 
         System.Random offsetRandomizer, shellRandomizer, rotationRandomizer, scaleRandomizer, distanceRandomizer;
+
+        private int GetTargetCount()
+        {
+            switch (_spawnMethod)
+            {
+                case SpawnMethod.Points:
+                    return spline.pointCount;
+                case SpawnMethod.Count:
+                default:
+                    return spawnCount;
+            }
+        }
 
         public void Clear()
         {
@@ -538,8 +570,9 @@ namespace Dreamteck.Splines
 
         private void Remove()
         {
-            if (_spawnCount >= spawned.Length) return;
-            for (int i = spawned.Length - 1; i >= _spawnCount; i--)
+            int targetCount = GetTargetCount();
+            if (targetCount >= spawned.Length) return;
+            for (int i = spawned.Length - 1; i >= targetCount; i--)
             {
                 if (i >= spawned.Length) break;
                 if (spawned[i] == null) continue;
@@ -552,13 +585,15 @@ namespace Dreamteck.Splines
 
                 }
             }
-            ObjectControl[] newSpawned = new ObjectControl[_spawnCount];
+            ObjectControl[] newSpawned = new ObjectControl[targetCount];
             for (int i = 0; i < newSpawned.Length; i++)
             {
                 newSpawned[i] = spawned[i];
             }
             spawned = newSpawned;
-            Rebuild();
+            // For consistency, I rebuild immediately here too. That way,
+            // the ObjectController behaves without glitching in all cases.
+            RebuildImmediate();
         }
 
         public void GetAll()
@@ -605,6 +640,12 @@ namespace Dreamteck.Splines
         protected override void LateRun()
         {
             base.LateRun();
+            if (_spawnMethod == SpawnMethod.Points && spline && lastPointCount != spline.pointCount)
+            {
+                if (_objectMethod != ObjectMethod.GetChildren) Remove();
+                Spawn();
+                lastPointCount = spline.pointCount;
+            }
             if (_objectMethod == ObjectMethod.GetChildren && lastChildCount != transform.childCount)
             {
                 Spawn();
@@ -617,10 +658,18 @@ namespace Dreamteck.Splines
         {
             if (spline == null) yield break;
             if (objects.Length == 0) yield break;
-            for (int i = spawned.Length; i <= spawnCount; i++)
-            for (int i = spawned.Length; i < spawnCount; i++)
+
+            int targetCount = GetTargetCount();
+            for (int i = spawned.Length; i < targetCount; i++)
             {
                 InstantiateSingle();
+                // Visual artifacts occur if not rebuilding immediately. Normally this can be solved
+                // by calling RebuildImmediate on the spline after modifying it,
+                // however, with delay this becomes difficult to control.
+                // The first object would position correctly, but the rest would
+                // have the wrong position for one frame, and the user would have to jump through
+                // some hoops to rebuild the user in sync with spawning.
+                RebuildImmediate();
                 yield return new WaitForSeconds(spawnDelay);
             }
         }
@@ -629,7 +678,12 @@ namespace Dreamteck.Splines
         {
             if (spline == null) return;
             if (objects.Length == 0) return;
-            for (int i = spawned.Length; i < spawnCount; i++) InstantiateSingle();
+
+            int targetCount = GetTargetCount();
+            for (int i = spawned.Length; i < targetCount; i++) InstantiateSingle();
+            // For consistency, I rebuild immediately here too. That way, there is no need for the user
+            // to figure out if the ObjectController has delay or not and keeps the usage simple.
+            RebuildImmediate();
         }
 
         private void InstantiateSingle()
