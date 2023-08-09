@@ -618,6 +618,7 @@ namespace Dreamteck.Splines
             if (spline == null) yield break;
             if (objects.Length == 0) yield break;
             for (int i = spawned.Length; i <= spawnCount; i++)
+            for (int i = spawned.Length; i < spawnCount; i++)
             {
                 InstantiateSingle();
                 yield return new WaitForSeconds(spawnDelay);
