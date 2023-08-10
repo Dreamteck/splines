@@ -660,6 +660,14 @@ namespace Dreamteck.Splines
 #endif
             newSpawned[newSpawned.Length - 1].transform.parent = transform;
             spawned = newSpawned;
+
+#if UNITY_EDITOR
+            // For prefabs, it is important that the spawned array gets marked as overridden.
+            // Otherwise, the Object Controller will lose references to objects that were spawned
+            // after prefab instantiation but before editor play/pause, causing it to leave behind
+            // objects and instantiating extra ones.
+            EditorUtility.SetDirty(this);
+#endif
         }
 
         protected override void Build()
