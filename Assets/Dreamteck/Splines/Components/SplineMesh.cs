@@ -272,6 +272,8 @@ namespace Dreamteck.Splines
             Vector3 channelScale = channel.NextRandomScale();
             float channelRotation = channel.NextRandomAngle();
 
+            float scaleFactor = 1;
+
             for (int i = 0; i < definition.vertexGroups.Count; i++)
             {
                 double percent = DMath.Lerp(from, to, definition.vertexGroups[i].percent);
@@ -288,8 +290,7 @@ namespace Dreamteck.Splines
                 if (_compensateCorners)
                 {
                     percent = UnclipPercent(percent);
-                    int s;
-                    for (s = 1; s < _samples.Length; s++)
+                    for (int s = 1; s < _samples.Length; s++)
                     {
                         if (_samples[s].percent >= percent)
                         {
@@ -300,7 +301,7 @@ namespace Dreamteck.Splines
                     }
                     Vector3 direction = (_next.position - _prev.position).normalized;
                     float angle = Vector3.Angle(direction, _modifiedResult.forward) * 2f;
-                    _modifiedResult.size *= 1 / Mathf.Sqrt(Mathf.Cos(angle * Mathf.Deg2Rad) * 0.5f + 0.5f);
+                    scaleFactor = 1 / Mathf.Sqrt(Mathf.Cos(angle * Mathf.Deg2Rad) * 0.5f + 0.5f);
                 }
 
                 Vector3 originalNormal = _modifiedResult.up;
@@ -324,11 +325,11 @@ namespace Dreamteck.Splines
                 {
                     ClipPercent(ref _modifiedResult.percent);
                 }
-                finalScale.x *= customValues.Item3.x * scaleMod.x;
+                finalScale.x *= customValues.Item3.x * scaleMod.x * scaleFactor;
                 finalScale.y *= customValues.Item3.y * scaleMod.y;
                 finalScale.z = 1f;
                 float resultSize = _modifiedResult.size;
-                _vertexMatrix.SetTRS(_modifiedResult.position + originalRight * (finalOffset.x * resultSize) + originalNormal * (finalOffset.y * resultSize) + originalDirection * offset.z, //Position
+                _vertexMatrix.SetTRS(_modifiedResult.position + originalRight * (finalOffset.x * resultSize * scaleFactor) + originalNormal * (finalOffset.y * resultSize) + originalDirection * offset.z, //Position
                     _modifiedResult.rotation * Quaternion.AngleAxis(finalRotation, Vector3.forward), //Rotation
                     finalScale * resultSize); //Scale
                 _normalMatrix = _vertexMatrix.inverse.transpose;
