@@ -413,10 +413,12 @@ namespace Dreamteck.Splines {
 
         /// <summary>
         /// Returns the sample at the given index with modifiers applied and
-        /// applies compensation to the size parameter based on the angle between the samples
+        /// outputs compensation in scaleFactor based on the angle between the samples,
+        /// which must be applied to X scale
         /// </summary>
-        public void GetSampleWithAngleCompensation(int index, ref SplineSample target)
+        public void GetSampleWithAngleCompensation(int index, ref SplineSample target, out float scaleFactor)
         {
+            scaleFactor = 1;
             GetSampleRaw(index, ref target);
             ModifySample(ref target, ref target);
             if(index > 0 && index < sampleCount - 1)
@@ -427,7 +429,7 @@ namespace Dreamteck.Splines {
                 GetSampleRaw(index + 1, ref _workSample);
                 ModifySample(ref _workSample, ref _workSample);
                 Vector3 next = _workSample.position - target.position;
-                target.size *= 1 / Mathf.Sqrt(Vector3.Dot(prev.normalized, next.normalized) * 0.5f + 0.5f);
+                scaleFactor = 1 / Mathf.Sqrt(Vector3.Dot(prev.normalized, next.normalized) * 0.5f + 0.5f);
             }
         }
 
