@@ -146,9 +146,10 @@ namespace Dreamteck.Splines
             bool hasOffset = offset != Vector3.zero;
             for (int i = 0; i < sampleCount; i++)
             {
+                float scaleFactor = 1f;
                 if (_compensateCorners)
                 {
-                    GetSampleWithAngleCompensation(i, ref evalResult);
+                    GetSampleWithAngleCompensation(i, ref evalResult, out scaleFactor);
                 }
                 else
                 {
@@ -164,9 +165,9 @@ namespace Dreamteck.Splines
                 float resultSize = GetBaseSize(evalResult);
                 if (hasOffset)
                 {
-                    center += (offset.x * resultSize) * right + (offset.y * resultSize) * evalResult.up + (offset.z * resultSize) * evalResult.forward;
+                    center += (offset.x * resultSize * scaleFactor) * right + (offset.y * resultSize) * evalResult.up + (offset.z * resultSize) * evalResult.forward;
                 }
-                float fullSize = size * resultSize;
+                float fullSize = size * resultSize * scaleFactor;
                 Vector3 lastVertPos = Vector3.zero;
                 Quaternion rot = Quaternion.AngleAxis(rotation, evalResult.forward);
                 if (uvMode == UVMode.UniformClamp || uvMode == UVMode.UniformClip) AddUVDistance(i);
