@@ -310,8 +310,8 @@ namespace Dreamteck.Splines
                         {
                             case Channel.UVOverride.ClampU: uv.x = (float)_modifiedResult.percent; break;
                             case Channel.UVOverride.ClampV: uv.y = (float)_modifiedResult.percent; break;
-                            case Channel.UVOverride.UniformU: uv.x = CalculateLength(0.0, ClipPercent(_modifiedResult.percent)); break;
-                            case Channel.UVOverride.UniformV: uv.y = CalculateLength(0.0, ClipPercent(_modifiedResult.percent)); break;
+                            case Channel.UVOverride.UniformU: uv.x = CalculateLength(0.0, _modifiedResult.percent); break;
+                            case Channel.UVOverride.UniformV: uv.y = CalculateLength(0.0, _modifiedResult.percent); break;
                         }
                         target.uv[index] = new Vector2(uv.x * uvScale.x * channel.uvScale.x, uv.y * uvScale.y * channel.uvScale.y);
                         target.uv[index] += uvOffset + channel.uvOffset;
