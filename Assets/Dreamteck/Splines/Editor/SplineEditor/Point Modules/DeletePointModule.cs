@@ -51,7 +51,7 @@ using System.Collections.Generic;
             Handles.DrawWireDisc(Event.current.mousePosition, -Vector3.forward, deleteRadius);
             Handles.color = Color.white;
             Handles.EndGUI();
-            if (SceneView.currentDrawingSceneView.camera.pixelRect.Contains(Event.current.mousePosition)) {
+            if (!eventModule.alt && SceneView.currentDrawingSceneView.camera.pixelRect.Contains(Event.current.mousePosition)) {
                 if (editor.eventModule.mouseLeftDown) GUIUtility.hotControl = GUIUtility.GetControlID(FocusType.Passive);
                 if (editor.eventModule.mouseLeft && lastMousePos != Event.current.mousePosition)
                 {
