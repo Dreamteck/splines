@@ -341,6 +341,7 @@ namespace Dreamteck.Splines.Editor
 
         protected override void OnDestroy()
         {
+            base.OnDestroy();
             SplineUser user = (SplineUser)target;
             if (Application.isEditor && !Application.isPlaying)
             {
