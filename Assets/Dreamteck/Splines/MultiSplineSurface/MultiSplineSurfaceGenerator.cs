@@ -1,10 +1,7 @@
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
-
 namespace Dreamteck.Splines
 {
+    using UnityEngine;
+
     [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshRenderer))]
     [AddComponentMenu("Dreamteck/Splines/Multi Spline Surface Generator")]
@@ -113,13 +110,14 @@ namespace Dreamteck.Splines
         protected override void Awake()
         {
             base.Awake();
-            mesh.name = "multispline_surface";
+
+            _mesh.name = "multispline_surface";
             for (int i = 0; i < _otherComputers.Length; i++)
             {
                 _otherComputers[i].onRebuild -= OnOtherRebuild;
                 _otherComputers[i].onRebuild += OnOtherRebuild;
             }
-            }
+        }
 
         void OnOtherRebuild()
         {
@@ -134,21 +132,21 @@ namespace Dreamteck.Splines
 
         protected override void BuildMesh()
         {
-            if (clippedSamples.Length == 0) return;
+            if (sampleCount == 0) return;
             if (_otherComputers.Length == 0) return;
             base.BuildMesh();
             GenerateVertices();
-            tsMesh.subMeshes.Clear();
-            if (!_separateMaterialIDs) tsMesh.triangles = MeshUtility.GeneratePlaneTriangles(clippedSamples.Length - 1, (otherComputers.Length * _iterations + otherComputers.Length + 1), flipFaces && !doubleSided);
+            _tsMesh.subMeshes.Clear();
+            if (!_separateMaterialIDs) _tsMesh.triangles = MeshUtility.GeneratePlaneTriangles(sampleCount - 1, (otherComputers.Length * _iterations + otherComputers.Length + 1), flipFaces && !doubleSided);
             else
             {
-                tris = MeshUtility.GeneratePlaneTriangles(clippedSamples.Length - 1, _iterations + 2, false);
+                tris = MeshUtility.GeneratePlaneTriangles(sampleCount - 1, _iterations + 2, false);
                 for (int i = 0; i < _otherComputers.Length; i++)
                 {
                     int[] newTris = new int[tris.Length];
                     tris.CopyTo(newTris, 0);
-                    tsMesh.subMeshes.Add(newTris);
-                    for (int n = 0; n < tsMesh.subMeshes[i].Length; n++) tsMesh.subMeshes[i][n] += i * ((_iterations + 1) * clippedSamples.Length);
+                    _tsMesh.subMeshes.Add(newTris);
+                    for (int n = 0; n < _tsMesh.subMeshes[i].Length; n++) _tsMesh.subMeshes[i][n] += i * ((_iterations + 1) * sampleCount);
                 }
             }
         }
@@ -157,44 +155,49 @@ namespace Dreamteck.Splines
         void GenerateVertices()
         {
             if (_otherComputers.Length == 0) return;
-            if (evaluateSplines.Length != clippedSamples.Length)
+            if (evaluateSplines.Length != sampleCount)
             {
-                evaluateSplines = new Spline[clippedSamples.Length];
+                evaluateSplines = new Spline[sampleCount];
                 for(int i = 0; i < evaluateSplines.Length; i++)
                 {
-                    evaluateSplines[i] = new Spline(Spline.Type.Hermite);
+                    //evaluateSplines[i] = new Spline(Spline.Type.Hermite);
+                    evaluateSplines[i] = new Spline(Spline.Type.Bezier);
                 }
             }
             if (evaluateSplines[0].points.Length != _otherComputers.Length + 1)
             {
                 for (int i = 0; i < evaluateSplines.Length; i++) evaluateSplines[i].points = new SplinePoint[_otherComputers.Length+1];
             }
-            for(int i = 0; i < clippedSamples.Length; i++)
+
+            SplineSample sample = default;
+
+            for(int i = 0; i < sampleCount; i++)
             {
-                double percent = (double)i / (clippedSamples.Length-1);
-                evaluateSplines[i].points[0].position = clippedSamples[i].position;
-                if(_automaticNormals) evaluateSplines[i].points[0].normal = Vector3.Cross(clippedSamples[i].direction, clippedSamples[i].right).normalized;
-                else evaluateSplines[i].points[0].normal = clippedSamples[i].normal;
-                evaluateSplines[i].points[0].color = clippedSamples[i].color;
+                double percent = (double)i / (sampleCount - 1);
+                GetSample(i, ref sample);
+                evaluateSplines[i].points[0].position = sample.position;
+                if(_automaticNormals) evaluateSplines[i].points[0].normal = Vector3.Cross(sample.forward, sample.right).normalized;
+                else evaluateSplines[i].points[0].normal = sample.up;
+                evaluateSplines[i].points[0].color = sample.color;
                 for (int n = 1; n <= _otherComputers.Length; n++)
                 {
                     SplineSample result = _otherComputers[n-1].Evaluate(DMath.Lerp(clipFrom, clipTo, percent));
                     evaluateSplines[i].points[n].position = result.position;
-                    if (_automaticNormals) evaluateSplines[i].points[n].normal = Vector3.Cross(result.direction, result.right).normalized;
-                    else evaluateSplines[i].points[n].normal = result.normal;
+                    if (_automaticNormals) evaluateSplines[i].points[n].normal = Vector3.Cross(result.forward, result.right).normalized;
+                    else evaluateSplines[i].points[n].normal = result.up;
                     evaluateSplines[i].points[n].color = result.color;
                 }
             }
             
             int vertexCount = (_otherComputers.Length * _iterations + _otherComputers.Length + 1) * evaluateSplines.Length;
-            if (tsMesh.vertexCount != vertexCount)
+            if (_tsMesh.vertexCount != vertexCount)
             {
-                tsMesh.vertices = new Vector3[vertexCount];
-                tsMesh.normals = new Vector3[vertexCount];
-                tsMesh.colors = new Color[vertexCount];
-                tsMesh.uv = new Vector2[vertexCount];
+                _tsMesh.vertices = new Vector3[vertexCount];
+                _tsMesh.normals = new Vector3[vertexCount];
+                _tsMesh.colors = new Color[vertexCount];
+                _tsMesh.uv = new Vector2[vertexCount];
             }
-            if (clippedSamples.Length == 0) return;
+            if (sampleCount == 0) return;
             int vertexIndex = 0;
             int totalPoints = (_otherComputers.Length * _iterations + _otherComputers.Length + 1);
             float xLength = 0f;
@@ -225,16 +228,16 @@ namespace Dreamteck.Splines
                             yLengths[n] += Vector3.Distance(eval.position, previousYpos);
                         }
                     }
-                    tsMesh.vertices[vertexIndex] = eval.position;
-                    if (_automaticNormals) tsMesh.normals[vertexIndex] = Vector3.Cross(eval.direction, eval.right).normalized;
-                    else tsMesh.normals[vertexIndex] = eval.normal;
-                    tsMesh.colors[vertexIndex] = eval.color * color;
+                    _tsMesh.vertices[vertexIndex] = eval.position;
+                    if (_automaticNormals) _tsMesh.normals[vertexIndex] = Vector3.Cross(eval.forward, eval.right).normalized;
+                    else _tsMesh.normals[vertexIndex] = eval.up;
+                    _tsMesh.colors[vertexIndex] = eval.color * color;
                     switch (_uvWrapMode)
                     {
-                        case UVWrapMode.Clamp: tsMesh.uv[vertexIndex] = new Vector2((float)n / (evaluateSplines.Length - 1)*uvScale.x+uvOffset.x, (float)percent * uvScale.y + uvOffset.y); break;
-                        case UVWrapMode.UniformX: tsMesh.uv[vertexIndex] = new Vector2(xLength * uvScale.x + uvOffset.x, (float)percent * uvScale.y + uvOffset.y); break;
-                        case UVWrapMode.UniformY: tsMesh.uv[vertexIndex] = new Vector2((float)n / (evaluateSplines.Length - 1) * uvScale.x + uvOffset.x, yLengths[n] * uvScale.y + uvOffset.y); break;
-                        case UVWrapMode.Uniform: tsMesh.uv[vertexIndex] = new Vector2(xLength * uvScale.x + uvOffset.x, yLengths[n] * uvScale.y + uvOffset.y); break;
+                        case UVWrapMode.Clamp: _tsMesh.uv[vertexIndex] = new Vector2((float)n / (evaluateSplines.Length - 1)*uvScale.x+uvOffset.x, (float)percent * uvScale.y + uvOffset.y); break;
+                        case UVWrapMode.UniformX: _tsMesh.uv[vertexIndex] = new Vector2(xLength * uvScale.x + uvOffset.x, (float)percent * uvScale.y + uvOffset.y); break;
+                        case UVWrapMode.UniformY: _tsMesh.uv[vertexIndex] = new Vector2((float)n / (evaluateSplines.Length - 1) * uvScale.x + uvOffset.x, yLengths[n] * uvScale.y + uvOffset.y); break;
+                        case UVWrapMode.Uniform: _tsMesh.uv[vertexIndex] = new Vector2(xLength * uvScale.x + uvOffset.x, yLengths[n] * uvScale.y + uvOffset.y); break;
                     }
                     vertexIndex++;
                 }

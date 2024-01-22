@@ -49,7 +49,7 @@ namespace Dreamteck.Splines
                     for (int n = 0; n < gen.otherComputers.Length; n++)
                     {
                         if (i < n) newComputers[n] = gen.otherComputers[n];
-                        else if (i > n) newComputers[n - 1] = gen.otherComputers[n];
+                        else if (i > n) newComputers[Mathf.Max(0, n - 1)] = gen.otherComputers[n];
                     }
                     gen.otherComputers = newComputers;
                 }
@@ -60,8 +60,8 @@ namespace Dreamteck.Splines
             if (newComp != null)
             {
                 bool fail = false;
-                if (newComp == gen.computer) fail = true;
-                else if (gen.rootUser != null && newComp == gen.rootUser.computer) fail = true;
+                if (newComp == gen.spline) fail = true;
+                else if (gen.spline != null && newComp == gen.spline) fail = true;
                 else
                 {
                     for (int i = 0; i < gen.otherComputers.Length; i++)
@@ -86,7 +86,15 @@ namespace Dreamteck.Splines
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Normals", EditorStyles.boldLabel);
             gen.automaticNormals = EditorGUILayout.Toggle("Automatic Normals", gen.automaticNormals);
-            if (!gen.automaticNormals) gen.normalMethod = EditorGUILayout.Popup("Normal Method", gen.normalMethod, normalMethods);
+
+            var normalMethods = new string[]
+            {
+                MeshGenerator.NormalMethod.Recalculate.ToString(),
+                MeshGenerator.NormalMethod.SplineNormals.ToString(),
+            };
+
+            if (!gen.automaticNormals) gen.normalMethod = (MeshGenerator.NormalMethod)EditorGUILayout.Popup("Normal Method", (int)gen.normalMethod, normalMethods);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Geometry", EditorStyles.boldLabel);
             gen.iterations = EditorGUILayout.IntField("Iterations", gen.iterations);
