@@ -58,21 +58,21 @@ namespace Dreamteck.Splines.Editor
             {
                 if (_editorAlwaysDraw.boolValue)
                 {
-                    for (int i = 0; i < serializedObject.targetObjects.Length; i++)
+                    for (int i = 0; i < _serializedObject.targetObjects.Length; i++)
                     {
-                        if (serializedObject.targetObjects[i] is SplineComputer)
+                        if (_serializedObject.targetObjects[i] is SplineComputer)
                         {
-                            DSSplineDrawer.RegisterComputer((SplineComputer)serializedObject.targetObjects[i]);
+                            DSSplineDrawer.RegisterComputer((SplineComputer)_serializedObject.targetObjects[i]);
                         }
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < serializedObject.targetObjects.Length; i++)
+                    for (int i = 0; i < _serializedObject.targetObjects.Length; i++)
                     {
-                        if (serializedObject.targetObjects[i] is SplineComputer)
+                        if (_serializedObject.targetObjects[i] is SplineComputer)
                         {
-                            DSSplineDrawer.UnregisterComputer((SplineComputer)serializedObject.targetObjects[i]);
+                            DSSplineDrawer.UnregisterComputer((SplineComputer)_serializedObject.targetObjects[i]);
                         }
                     }
                 }
@@ -86,7 +86,7 @@ namespace Dreamteck.Splines.Editor
             }
 
             EditorGUILayout.Space();
-            if (serializedObject.targetObjects.Length == 1)
+            if (_serializedObject.targetObjects.Length == 1)
             {
                 EditorGUILayout.HelpBox("Samples: " + _spline.sampleCount + "\n\r" + "Length: " + _length, MessageType.Info);
             } else
@@ -98,11 +98,11 @@ namespace Dreamteck.Splines.Editor
             {
                 if (editorUpdateMode == SplineComputer.EditorUpdateMode.Default)
                 {
-                    for (int i = 0; i < serializedObject.targetObjects.Length; i++)
+                    for (int i = 0; i < _serializedObject.targetObjects.Length; i++)
                     {
-                        if(serializedObject.targetObjects[i] is SplineComputer)
+                        if(_serializedObject.targetObjects[i] is SplineComputer)
                         {
-                            ((SplineComputer)serializedObject.targetObjects[i]).RebuildImmediate(true);
+                            ((SplineComputer)_serializedObject.targetObjects[i]).RebuildImmediate(true);
                         }
                     }
                     SceneView.RepaintAll();
