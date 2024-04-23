@@ -18,69 +18,27 @@ namespace Dreamteck.Splines
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Paths", EditorStyles.boldLabel);
 
-            for (int i = 0; i < gen.otherComputers.Length; i++)
-            {
-                EditorGUILayout.BeginHorizontal();
+            SerializedProperty computersProperty = serializedObject.FindProperty("_otherComputers");
 
-                GUILayout.Label(gen.otherComputers[i].name);
-                if (i > 0)
-                {
-                    if (GUILayout.Button("▲", GUILayout.Width(30)))
-                    {
-                        SplineComputer temp = gen.otherComputers[i];
-                        gen.otherComputers[i] = gen.otherComputers[i - 1];
-                        gen.otherComputers[i - 1] = temp;
-                        gen.Rebuild();
-                    }
-                }
-                if (i < gen.otherComputers.Length - 1)
-                {
-                    if (GUILayout.Button("▼", GUILayout.Width(30)))
-                    {
-                        SplineComputer temp = gen.otherComputers[i];
-                        gen.otherComputers[i] = gen.otherComputers[i + 1];
-                        gen.otherComputers[i + 1] = temp;
-                        gen.Rebuild();
-                    }
-                }
-                if (GUILayout.Button("x", GUILayout.Width(30)))
-                {
-                    SplineComputer[] newComputers = new SplineComputer[gen.otherComputers.Length - 1];
-                    for (int n = 0; n < gen.otherComputers.Length; n++)
-                    {
-                        if (i < n) newComputers[n] = gen.otherComputers[n];
-                        else if (i > n) newComputers[Mathf.Max(0, n - 1)] = gen.otherComputers[n];
-                    }
-                    gen.otherComputers = newComputers;
-                }
-                EditorGUILayout.EndHorizontal();
-            }
-            SplineComputer newComp = null;
-            newComp = (SplineComputer)EditorGUILayout.ObjectField("Add Spline", newComp, typeof(SplineComputer), true);
-            if (newComp != null)
+            EditorGUILayout.PropertyField(computersProperty);
+
+            if(GUILayout.Button("Add Spline"))
             {
-                bool fail = false;
-                if (newComp == gen.spline) fail = true;
-                else if (gen.spline != null && newComp == gen.spline) fail = true;
-                else
+                SplineComputer reference = gen.spline;
+                if(gen.otherComputers.Length > 0)
                 {
-                    for (int i = 0; i < gen.otherComputers.Length; i++)
-                    {
-                        if (gen.otherComputers[i] == newComp)
-                        {
-                            fail = true;
-                            break;
-                        }
-                    }
+                    reference = gen.otherComputers[gen.otherComputers.Length - 1];
                 }
-                if (!fail)
-                {
-                    SplineComputer[] newComputers = new SplineComputer[gen.otherComputers.Length + 1];
-                    gen.otherComputers.CopyTo(newComputers, 0);
-                    newComputers[newComputers.Length - 1] = newComp;
-                    gen.otherComputers = newComputers;
-                }
-                else EditorUtility.DisplayDialog("Can't add computer", "This computer is already added to the generator", "OK");
+   
+                SplineComputer spline = Instantiate(reference, gen.transform);
+                Undo.RegisterCreatedObjectUndo(spline.gameObject, "Surface Add Spline");
+
+                Vector3 direction = Vector3.Slerp(reference.Evaluate(0.0).right, reference.Evaluate(1.0).right, 0.5f);
+                spline.transform.position += direction * reference.CalculateLength();
+                computersProperty.arraySize += 1;
+                computersProperty.GetArrayElementAtIndex(computersProperty.arraySize - 1).objectReferenceValue = spline;
+                spline.RebuildImmediate();
+                gen.RebuildImmediate();
             }
 
             EditorGUILayout.Space();
@@ -97,8 +55,8 @@ namespace Dreamteck.Splines
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Geometry", EditorStyles.boldLabel);
-            gen.iterations = EditorGUILayout.IntField("Iterations", gen.iterations);
-            if (gen.iterations < 0) gen.iterations = 0;
+            gen.subdivisions = EditorGUILayout.IntField("Iterations", gen.subdivisions);
+            if (gen.subdivisions < 0) gen.subdivisions = 0;
             EditorGUILayout.LabelField("UVs", EditorStyles.boldLabel);
             gen.uvWrapMode = (MultiSplineSurfaceGenerator.UVWrapMode)EditorGUILayout.EnumPopup("Wrap Mode", gen.uvWrapMode);
             gen.uvOffset = EditorGUILayout.Vector2Field("UV Offset", gen.uvOffset);
@@ -121,6 +79,36 @@ namespace Dreamteck.Splines
             for (int i = 0; i < gen.otherComputers.Length; i++)
             {
                 //SplineDrawer.DrawSplineComputer(gen.otherComputers[i]);
+            }
+
+            SplineComputer[] otherSplines = gen.otherComputers;
+
+            bool rebuild = false;
+            for (int i = 0; i < otherSplines.Length; i++)
+            {
+                bool markDirty = false;
+                for (int j = 0; j < otherSplines[i].pointCount; j++)
+                {
+                    Vector3 point = otherSplines[i].GetPointPosition(j);
+                    Vector3 newPos = SplineEditorHandles.FreeMoveCircle(point, HandleUtility.GetHandleSize(point) * 0.22f);
+                    if (Vector3.Distance(point, newPos) > 0.01f)
+                    {
+                        markDirty = true;
+                        otherSplines[i].SetPointPosition(j, newPos);
+                    }
+                }
+                if (markDirty)
+                {
+                    EditorUtility.SetDirty(otherSplines[i]);
+                    rebuild = true;
+                }
+            }
+            if (rebuild)
+            {
+                for (int i = 0; i < users.Length; i++)
+                {
+                    users[i].RebuildImmediate();
+                }
             }
         }
     }
