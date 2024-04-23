@@ -121,6 +121,25 @@
             }
         }
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            for (int i = 0; i < _colliders.Length; i++)
+            {
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    DestroyImmediate(_colliders[i].transform.gameObject);
+                } else
+                {
+                    Destroy(_colliders[i].transform.gameObject);
+                }
+#else
+                Destroy(_colliders[i].transform.gameObject);
+#endif
+            }
+        }
+
         [System.Serializable]
         public class ColliderObject
         {

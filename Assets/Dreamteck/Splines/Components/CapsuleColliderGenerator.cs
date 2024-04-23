@@ -4,14 +4,11 @@
 
     public class CapsuleColliderGenerator : SplineUser, ISerializationCallbackReceiver
     {
-        [SerializeField, Min(0f)] private float _radius = 1f;
-        [SerializeField, Min(0f)] private float _height = 1f;
-        [SerializeField] private bool _autoCalculateHeight = true;
-        [SerializeField] private CapsuleColliderZDirection _direction = CapsuleColliderZDirection.Z;
-
-        [SerializeField]
-        [HideInInspector]
-        public ColliderObject[] _colliders = new ColliderObject[0];
+        [SerializeField, HideInInspector, Min(0f)] private float _radius = 1f;
+        [SerializeField, HideInInspector, Min(0f)] private float _height = 1f;
+        [SerializeField, HideInInspector] private bool _overlapCaps = true;
+        [SerializeField, HideInInspector] private CapsuleColliderZDirection _direction = CapsuleColliderZDirection.Z;
+        [SerializeField, HideInInspector] private ColliderObject[] _colliders = new ColliderObject[0];
 
         public float radius
         {
@@ -21,6 +18,45 @@
                 if (value != _radius)
                 {
                     _radius = value;
+                    Rebuild();
+                }
+            }
+        }
+
+        public float height
+        {
+            get { return _height; }
+            set
+            {
+                if (value != _height)
+                {
+                    _height = value;
+                    Rebuild();
+                }
+            }
+        }
+
+        public bool overlapCaps
+        {
+            get { return _overlapCaps; }
+            set
+            {
+                if (value != _overlapCaps)
+                {
+                    _overlapCaps = value;
+                    Rebuild();
+                }
+            }
+        }
+
+        public CapsuleColliderZDirection direction
+        {
+            get { return _direction; }
+            set
+            {
+                if (value != _direction)
+                {
+                    _direction = value;
                     Rebuild();
                 }
             }
@@ -59,34 +95,14 @@
             int objectCount = sampleCount - 1;
             if (objectCount != _colliders.Length)
             {
-                ColliderObject[] newColliders = new ColliderObject[objectCount];
-                for (int i = 0; i < newColliders.Length; i++)
-                {
-                    if (i < _colliders.Length)
-                    {
-                        newColliders[i] = _colliders[i];
-                    }
-                    else
-                    {
-                        GameObject newObject = new GameObject("Collider " + i);
-                        newObject.layer = gameObject.layer;
-                        newObject.transform.parent = trs;
-                        newColliders[i] = new ColliderObject(newObject.transform, newObject.AddComponent<CapsuleCollider>(), _direction, _height);
-                    }
-                }
-                if (newColliders.Length < _colliders.Length)
-                {
-                    for (int i = newColliders.Length; i < _colliders.Length; i++)
-                    {
-                        DestroyCollider(_colliders[i]);
-                    }
-                }
-                _colliders = newColliders;
+                GenerateColliders(objectCount);
             }
 
             SplineSample current = new SplineSample();
             SplineSample next = new SplineSample();
             Evaluate(0.0, ref current);
+
+            bool controlHeight = _direction == CapsuleColliderZDirection.Z;
 
             for (int i = 0; i < objectCount; i++)
             {
@@ -98,24 +114,80 @@
                 _colliders[i].collider.radius = _radius;
                 _colliders[i].collider.direction = (int)_direction;
 
-                if (_autoCalculateHeight)
+                var distance = Vector3.Distance(current.position, next.position);
+
+                if (controlHeight)
                 {
-                    var distance = Vector3.Distance(current.position, next.position);
-                    _colliders[i].collider.height = distance;
+                    if (_overlapCaps)
+                    {
+                        _colliders[i].collider.height = distance + _radius * 2f;
+                    } else
+                    {
+                        _colliders[i].collider.height = distance;
+                    }
+                    _colliders[i].collider.radius = _radius;
                 }
                 else
                 {
                     _colliders[i].collider.height = _height;
+                    _colliders[i].collider.radius = distance * 0.5f;
                 }
 
                 current = next;
             }
         }
 
+        private void GenerateColliders(int count)
+        {
+            ColliderObject[] newColliders = new ColliderObject[count];
+            for (int i = 0; i < newColliders.Length; i++)
+            {
+                if (i < _colliders.Length)
+                {
+                    newColliders[i] = _colliders[i];
+                }
+                else
+                {
+                    GameObject newObject = new GameObject("Collider " + i);
+                    newObject.layer = gameObject.layer;
+                    newObject.transform.parent = trs;
+                    newColliders[i] = new ColliderObject(newObject.transform, newObject.AddComponent<CapsuleCollider>(), _direction, _height);
+                }
+            }
+            if (newColliders.Length < _colliders.Length)
+            {
+                for (int i = newColliders.Length; i < _colliders.Length; i++)
+                {
+                    DestroyCollider(_colliders[i]);
+                }
+            }
+            _colliders = newColliders;
+        }
+
         public override void OnBeforeSerialize()
         {
             base.OnBeforeSerialize();
             Build();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            for (int i = 0; i < _colliders.Length; i++)
+            {
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    DestroyImmediate(_colliders[i].transform.gameObject);
+                }
+                else
+                {
+                    Destroy(_colliders[i].transform.gameObject);
+                }
+#else
+                Destroy(_colliders[i].transform.gameObject);
+#endif
+            }
         }
 
         [System.Serializable]
