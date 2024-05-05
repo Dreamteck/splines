@@ -9,6 +9,30 @@ namespace Dreamteck.Splines
     [AddComponentMenu("Dreamteck/Splines/Users/Object Controller")]
     public class ObjectController : SplineUser
     {
+        internal class LengthCache
+        {
+            private SplineUser _user;
+            private float _length;
+            private double _clipFrom;
+            private double _clipTo;
+            public LengthCache(SplineUser user)
+            {
+                _user = user;
+                _length = user.spline.CalculateLength(user.clipFrom, user.clipTo);
+                _clipFrom = user.clipFrom;
+                _clipTo = user.clipTo;
+            }
+            public void Refresh()
+            {
+                if (!_user) return;
+                _length = _user.spline.CalculateLength(_user.clipFrom, _user.clipTo);
+                _clipFrom = _user.clipFrom;
+                _clipTo = _user.clipTo;
+            }
+            public static implicit operator float(LengthCache cache) { return cache == null ? 0 : cache._length; }
+            public bool Valid { get { return _user && _clipFrom == _user.clipFrom && _clipTo == _user.clipTo; } }
+        }
+
         [System.Serializable]
         internal class ObjectControl
         {
@@ -23,7 +47,7 @@ namespace Dreamteck.Splines
             {
                 get {
                     if (gameObject == null) return null;
-                    return gameObject.transform;  
+                    return gameObject.transform;
                 }
             }
             public GameObject gameObject;
@@ -63,7 +87,7 @@ namespace Dreamteck.Splines
 
         }
 
-        public enum SpawnMethod { Count, Points }
+        public enum SpawnMethod { Count, Points, Distance }
         public enum ObjectMethod { Instantiate, GetChildren }
         public enum Positioning { Stretch, Clip }
         public enum Iteration { Ordered, Random }
@@ -125,6 +149,29 @@ namespace Dreamteck.Splines
                     }
                     else _spawnCount = value;
                 }
+            }
+        }
+
+        public float spawnDistance
+        {
+            get { return _spawnDistance; }
+            set
+            {
+                if (value < 0.001f) value = 0.001f;
+                if (_objectMethod == ObjectMethod.Instantiate)
+                {
+                    if (value < _spawnDistance)
+                    {
+                        _spawnDistance = value;
+                        Remove();
+                    }
+                    else
+                    {
+                        _spawnDistance = value;
+                        Spawn();
+                    }
+                }
+                else _spawnDistance = value;
             }
         }
 
@@ -440,6 +487,10 @@ namespace Dreamteck.Splines
         [SerializeField]
         [HideInInspector]
         private int _spawnCount = 0;
+        [SerializeField]
+        [HideInInspector]
+        private float _spawnDistance = 1f;
+        private LengthCache _length = null;
 #if UNITY_EDITOR
         [SerializeField]
         [HideInInspector]
@@ -515,7 +566,7 @@ namespace Dreamteck.Splines
         [SerializeField]
         [HideInInspector]
         private float _maxObjectDistance = 0f;
-        
+
         [SerializeField]
         [HideInInspector]
         private ObjectControllerCustomRuleBase _customOffsetRule;
@@ -536,6 +587,8 @@ namespace Dreamteck.Splines
             {
                 case SpawnMethod.Points:
                     return spline.pointCount;
+                case SpawnMethod.Distance:
+                    return Mathf.CeilToInt(_length / _spawnDistance) + 1;
                 case SpawnMethod.Count:
                 default:
                     return spawnCount;
@@ -566,6 +619,7 @@ namespace Dreamteck.Splines
         private void OnValidate()
         {
             if (_spawnCount < 0) _spawnCount = 0;
+            if (_spawnDistance < 0.001f) _spawnDistance = 0.001f;
         }
 
         private void Remove()
@@ -646,6 +700,13 @@ namespace Dreamteck.Splines
                 Spawn();
                 lastPointCount = spline.pointCount;
             }
+            if (_spawnMethod == SpawnMethod.Distance && (_length == null || !_length.Valid))
+            {
+                if (_length == null) _length = new LengthCache(this);
+                else _length.Refresh();
+                if (_objectMethod != ObjectMethod.GetChildren) Remove();
+                Spawn();
+            }
             if (_objectMethod == ObjectMethod.GetChildren && lastChildCount != transform.childCount)
             {
                 Spawn();
@@ -720,6 +781,9 @@ namespace Dreamteck.Splines
         protected override void Build()
         {
             base.Build();
+
+            _length = null;
+
             offsetRandomizer = new System.Random(_randomSeed);
             if(_shellOffset) shellRandomizer = new System.Random(_randomSeed + 1);
             rotationRandomizer = new System.Random(_randomSeed + 2);
@@ -745,13 +809,20 @@ namespace Dreamteck.Splines
                 {
                     if(!_useCustomObjectDistance)
                     {
-                        if (spline.isClosed)
+                        if (_spawnMethod == SpawnMethod.Distance)
                         {
-                            percent = (float)i / spawned.Length;
+                            percent = (float)Travel(0d, i * _spawnDistance);
                         }
                         else
                         {
-                            percent = (float)i / (spawned.Length - 1);
+                            if (spline.isClosed)
+                            {
+                                percent = (float)i / spawned.Length;
+                            }
+                            else
+                            {
+                                percent = (float)i / (spawned.Length - 1);
+                            }
                         }
                     } else
                     {
@@ -768,7 +839,7 @@ namespace Dreamteck.Splines
                 {
                     percent += 1f;
                 }
-                
+
                 if (objectPositioning == Positioning.Clip)
                 {
                     spline.Evaluate(percent, ref evalResult);
@@ -787,7 +858,7 @@ namespace Dreamteck.Splines
                     {
                         _customScaleRule.SetContext(this, evalResult, i, spawned.Length);
                         spawned[i].scale = _customOffsetRule.GetScale();
-                    } 
+                    }
                     else
                     {
                         Vector3 scale = spawned[i].baseScale * evalResult.size;
@@ -825,7 +896,7 @@ namespace Dreamteck.Splines
                 {
                     _customOffsetRule.SetContext(this, evalResult, i, spawned.Length);
                     posOffset = _customOffsetRule.GetOffset();
-                } 
+                }
                 else if (_minOffset != _maxOffset)
                 {
                     if(_shellOffset)
