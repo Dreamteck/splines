@@ -291,11 +291,8 @@ namespace Dreamteck.Splines.Editor
                     spline.DisconnectNode(node.Key);
                     nodes.Add(node.Key - 1, node.Value);
                 }
-                if (node.Key == index)
-                {
-                    spline.DisconnectNode(node.Key);
-                }
             }
+            spline.DisconnectNode(index);
             var nodesProperty = _serializedObject.FindProperty("_nodes");
             for (int i = 0; i < nodesProperty.arraySize; i++)
             {
