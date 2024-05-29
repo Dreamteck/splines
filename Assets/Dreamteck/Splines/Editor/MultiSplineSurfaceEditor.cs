@@ -19,6 +19,7 @@ namespace Dreamteck.Splines
             EditorGUILayout.LabelField("Paths", EditorStyles.boldLabel);
 
             SerializedProperty computersProperty = serializedObject.FindProperty("_otherComputers");
+            SerializedProperty subdivisionsProperty = serializedObject.FindProperty("_subdivisions");
 
             EditorGUILayout.PropertyField(computersProperty);
 
@@ -55,12 +56,12 @@ namespace Dreamteck.Splines
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Geometry", EditorStyles.boldLabel);
-            gen.subdivisions = EditorGUILayout.IntField("Iterations", gen.subdivisions);
-            if (gen.subdivisions < 0) gen.subdivisions = 0;
-            EditorGUILayout.LabelField("UVs", EditorStyles.boldLabel);
-            gen.uvWrapMode = (MultiSplineSurfaceGenerator.UVWrapMode)EditorGUILayout.EnumPopup("Wrap Mode", gen.uvWrapMode);
-            gen.uvOffset = EditorGUILayout.Vector2Field("UV Offset", gen.uvOffset);
-            gen.uvScale = EditorGUILayout.Vector2Field("UV Scale", gen.uvScale);
+            EditorGUILayout.PropertyField(subdivisionsProperty);
+            if (EditorGUI.EndChangeCheck()) serializedObject.ApplyModifiedProperties();
+
+            UVControls(gen);
+
+
         }
 
         public override void OnInspectorGUI()

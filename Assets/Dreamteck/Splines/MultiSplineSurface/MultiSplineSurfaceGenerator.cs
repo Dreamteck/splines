@@ -169,7 +169,11 @@ namespace Dreamteck.Splines
         void GenerateVertices()
         {
             if (_otherComputers.Length == 0) return;
+
+            ResetUVDistance();
+
             SplineSample sample = default;
+            SplineSample sample2 = default;
 
             for (int i = 0; i < _otherComputers.Length + 1; i++)
             {
@@ -181,12 +185,12 @@ namespace Dreamteck.Splines
 
                 for (int j = 0; j < sampleCount; j++)
                 {
-                    if(_splines[j].points.Length != _otherComputers.Length + 1)
+                    if (_splines[j].points.Length != _otherComputers.Length + 1)
                     {
                         _splines[j].points = new SplinePoint[_otherComputers.Length + 1];
                     }
                     
-                    double xPercent = (double)j / (sampleCount - 1);
+                    double xPercent = DMath.Lerp(clipFrom, clipTo, (double)j / (sampleCount - 1));
                     if (i > 0)
                     {
                         splineComp.Evaluate(xPercent, ref sample);
@@ -202,18 +206,48 @@ namespace Dreamteck.Splines
                 }
             }
 
+
+
             for (int x = 0; x < _splines.Length; x++)
             {
-                float xPercent = (float)x / (_splines.Length - 1);
+                if (uvMode == UVMode.UniformClamp || uvMode == UVMode.UniformClip)
+                {
+                    AddUVDistance(x);
+                } else
+                {
+                    GetSample(x, ref sample2);
+                }
+                Vector3 lastPos = sample.position;
+                float ydist = 0f;
+                float xPercent = Mathf.Lerp((float)clipFrom, (float)clipTo, (float)x / (_splines.Length - 1));
                 for (int y = 0; y < iterations + 1; y++)
                 {
                     float yPercent = (float)y / iterations;
                     int index = x + y * _splines.Length;
                     _splines[x].Evaluate(yPercent, ref sample);
+                    if (y > 0)
+                    {
+                        ydist += Vector3.Distance(lastPos, sample.position);
+                    }
+                    lastPos = sample.position;
+                    if (uvMode == UVMode.UniformClamp )
+                    {
+                        __uvs.x = CalculateUVUniformClamp(_vDist);
+                        __uvs.y = CalculateUVUniformClamp(ydist);
+                    } else if(uvMode == UVMode.UniformClip)
+                    {
+                        __uvs.x = CalculateUVUniformClip(_vDist);
+                        __uvs.y = CalculateUVUniformClip(ydist);
+                    }
+                    else
+                    {
+                        CalculateUVs(xPercent, yPercent);
+                    }
+
                     _tsMesh.vertices[index] = sample.position;
                     _tsMesh.normals[index] = sample.up;
                     _tsMesh.colors[index] = sample.color;
-                    _tsMesh.uv[index] = new Vector2((float)xPercent, (float)yPercent);
+                    _tsMesh.uv[index] = Vector2.one * 0.5f + (Vector2)(Quaternion.AngleAxis(uvRotation + 180f, Vector3.forward) * (Vector2.one * 0.5f - __uvs));
                 }
             }
         }

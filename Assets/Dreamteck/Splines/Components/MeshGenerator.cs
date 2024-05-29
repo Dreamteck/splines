@@ -292,7 +292,7 @@ namespace Dreamteck.Splines
         protected bool _updateCollider = false;
         protected float _lastUpdateTime = 0f;
 
-        private float _vDist = 0f;
+        protected float _vDist = 0f;
         protected static Vector2 __uvs = Vector2.zero;
 
         protected virtual string meshName => "Mesh";
@@ -566,11 +566,31 @@ namespace Dreamteck.Splines
             __uvs.x = u * _uvScale.x - _uvOffset.x;
             switch (uvMode)
             {
-                case UVMode.Clip:  __uvs.y = (float)percent * _uvScale.y - _uvOffset.y; break;
-                case UVMode.Clamp: __uvs.y = (float)DMath.InverseLerp(clipFrom, clipTo, percent) * _uvScale.y - _uvOffset.y;  break;
-                case UVMode.UniformClamp: __uvs.y = _vDist * _uvScale.y / (float)span - _uvOffset.y; break;
-                default: __uvs.y = _vDist * _uvScale.y - _uvOffset.y; break;
+                case UVMode.Clip:  __uvs.y = CalculateUVClip(percent); break;
+                case UVMode.Clamp: __uvs.y = CalculateUVClamp(percent);  break;
+                case UVMode.UniformClamp: __uvs.y = CalculateUVUniformClamp(_vDist); break;
+                default: __uvs.y = CalculateUVUniformClip(_vDist); break;
             }
+        }
+
+        protected float CalculateUVUniformClamp(float distance)
+        {
+            return distance * _uvScale.y / (float)span - _uvOffset.y;
+        }
+
+        protected float CalculateUVUniformClip(float distance)
+        {
+            return distance * _uvScale.y - _uvOffset.y;
+        }
+
+        protected float CalculateUVClip(double percent)
+        {
+            return (float)percent * _uvScale.y - _uvOffset.y;
+        }
+
+        protected float CalculateUVClamp(double percent)
+        {
+            return (float)DMath.InverseLerp(clipFrom, clipTo, percent) * _uvScale.y - _uvOffset.y;
         }
 
         protected float GetBaseSize(SplineSample sample)
