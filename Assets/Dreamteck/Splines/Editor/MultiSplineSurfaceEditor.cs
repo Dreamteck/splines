@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using Dreamteck.Splines.Editor;
+using PlasticGui;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,7 +22,7 @@ namespace Dreamteck.Splines
             SerializedProperty computersProperty = serializedObject.FindProperty("_otherComputers");
             SerializedProperty subdivisionsProperty = serializedObject.FindProperty("_subdivisions");
 
-            EditorGUILayout.PropertyField(computersProperty);
+            EditorGUILayout.PropertyField(computersProperty, new GUIContent("Other Splines"));
 
             if(GUILayout.Button("Add Spline"))
             {
@@ -35,6 +36,7 @@ namespace Dreamteck.Splines
                 Undo.RegisterCreatedObjectUndo(spline.gameObject, "Surface Add Spline");
 
                 Vector3 direction = Vector3.Slerp(reference.Evaluate(0.0).right, reference.Evaluate(1.0).right, 0.5f);
+                spline.Subscribe(gen);
                 spline.transform.position += direction * reference.CalculateLength();
                 computersProperty.arraySize += 1;
                 computersProperty.GetArrayElementAtIndex(computersProperty.arraySize - 1).objectReferenceValue = spline;

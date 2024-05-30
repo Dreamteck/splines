@@ -67,11 +67,25 @@ namespace Dreamteck.Splines
             set
             {
                 bool rebuild = false;
-                if (value.Length != _otherComputers.Length) rebuild = true;
+                if (value.Length != _otherComputers.Length)
+                {
+                    rebuild = true;
+                    for (int i = 0; i < _otherComputers.Length; i++)
+                    {
+                        if (_otherComputers[i] != null)
+                        {
+                            _otherComputers[i].Unsubscribe(this);
+                        }
+                    }
+                }
                 else
                 {
                     for (int i = 0; i < value.Length; i++)
                     {
+                        if (_otherComputers[i] != null)
+                        {
+                            _otherComputers[i].Unsubscribe(this);
+                        }
                         if (value[i] != _otherComputers[i])
                         {
                             rebuild = true;
@@ -82,6 +96,13 @@ namespace Dreamteck.Splines
                 if (rebuild)
                 {
                     _otherComputers = value;
+                    for (int i = 0; i < _otherComputers.Length; i++)
+                    {
+                        if (_otherComputers[i] != null)
+                        {
+                            _otherComputers[i].Subscribe(this);
+                        }
+                    }
                     Rebuild();
                 }
             }
@@ -149,20 +170,18 @@ namespace Dreamteck.Splines
             GenerateVertices();
             _tsMesh.subMeshes.Clear();
 
-            //if(_separateMaterialIDs)
-            //{
-            //    tris = MeshUtility.GeneratePlaneTriangles(sampleCount - 1, _iterations + 2, false);
-            //    for (int i = 0; i < _otherComputers.Length; i++)
-            //    {
-            //        int[] newTris = new int[tris.Length];
-            //        tris.CopyTo(newTris, 0);
-            //        _tsMesh.subMeshes.Add(newTris);
-            //        for (int n = 0; n < _tsMesh.subMeshes[i].Length; n++)
-            //        {
-            //            _tsMesh.subMeshes[i][n] += i * ((_iterations + 1) * sampleCount);
-            //        }
-            //    }
-            //}
+            if (_separateMaterialIDs)
+            {
+                for (int i = 0; i < _otherComputers.Length; i++)
+                {
+                    int[] newTris = MeshUtility.GeneratePlaneTriangles(sampleCount - 1, subdivisions + 1, false);
+                    _tsMesh.subMeshes.Add(newTris);
+                    for (int n = 0; n < _tsMesh.subMeshes[i].Length; n++)
+                    {
+                        _tsMesh.subMeshes[i][n] += i * (_subdivisions * sampleCount);
+                    }
+                }
+            }
         }
 
 
