@@ -292,6 +292,7 @@ namespace Dreamteck.Splines.Editor
                     nodes.Add(node.Key - 1, node.Value);
                 }
             }
+            spline.DisconnectNode(index);
             var nodesProperty = _serializedObject.FindProperty("_nodes");
             for (int i = 0; i < nodesProperty.arraySize; i++)
             {
