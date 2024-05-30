@@ -100,6 +100,10 @@ namespace Dreamteck.Splines
                     {
                         if (_otherComputers[i] != null)
                         {
+                            if (_otherComputers[i].subscriberCount == 0)
+                            {
+                                _otherComputers[i].name = "Surface Spline " + (i + 1);
+                            }
                             _otherComputers[i].Subscribe(this);
                         }
                     }

@@ -21,10 +21,38 @@ namespace Dreamteck.Splines
 
             SerializedProperty computersProperty = serializedObject.FindProperty("_otherComputers");
             SerializedProperty subdivisionsProperty = serializedObject.FindProperty("_subdivisions");
+            if (EditorGUI.EndChangeCheck()) serializedObject.ApplyModifiedProperties();
+
+            EditorGUI.BeginChangeCheck();
+            bool hasNullSpline = false;
+            for (int i = 0; i < gen.otherComputers.Length; i++)
+            {
+                if (gen.otherComputers[i] == null)
+                {
+                    hasNullSpline = true;
+                    break;
+                }
+            }
+            if(hasNullSpline)
+            {
+                EditorGUILayout.HelpBox("Missing or not enough splines. Please, link at least one splines and remove any missing references.", MessageType.Error);
+            }
 
             EditorGUILayout.PropertyField(computersProperty, new GUIContent("Other Splines"));
 
-            if(GUILayout.Button("Add Spline"))
+            if (EditorGUI.EndChangeCheck())
+            {
+                for (int i = 0; i < computersProperty.arraySize; i++)
+                {
+                    SerializedProperty compProperty = computersProperty.GetArrayElementAtIndex(i);
+                    SplineComputer spline = (SplineComputer)compProperty.objectReferenceValue;
+                    spline.Unsubscribe(gen);
+                    spline.Subscribe(gen);
+                }
+                serializedObject.ApplyModifiedProperties();
+            }
+
+            if (GUILayout.Button("Add Spline"))
             {
                 SplineComputer reference = gen.spline;
                 if(gen.otherComputers.Length > 0)
@@ -44,6 +72,7 @@ namespace Dreamteck.Splines
                 gen.RebuildImmediate();
             }
 
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Normals", EditorStyles.boldLabel);
             gen.automaticNormals = EditorGUILayout.Toggle("Automatic Normals", gen.automaticNormals);
@@ -92,6 +121,10 @@ namespace Dreamteck.Splines
                 bool markDirty = false;
                 for (int j = 0; j < otherSplines[i].pointCount; j++)
                 {
+                    if (otherSplines[i].subscriberCount == 1)
+                    {
+                        otherSplines[i].name = "Surface Spline " + (i + 1);
+                    }
                     Vector3 point = otherSplines[i].GetPointPosition(j);
                     Vector3 newPos = SplineEditorHandles.FreeMoveCircle(point, HandleUtility.GetHandleSize(point) * 0.22f);
                     if (Vector3.Distance(point, newPos) > 0.01f)
