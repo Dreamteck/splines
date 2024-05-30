@@ -842,7 +842,14 @@ namespace Dreamteck.Splines {
             double result = _sampleCollection.Travel(UnclipPercent(start), distance, direction, out moved, clipFrom, clipTo);
             double clippedResult = ClipPercent(result);
 
-            moved -= (float)(result - clippedResult);
+            if (result > clipTo)
+            {
+                moved -= _sampleCollection.CalculateLength(clipTo, result);
+            }
+            else if (result < clipFrom)
+            {
+                moved -= _sampleCollection.CalculateLength(result, clipFrom);
+            }
 
             return clippedResult;
         }
