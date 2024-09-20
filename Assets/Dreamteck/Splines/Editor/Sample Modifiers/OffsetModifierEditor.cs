@@ -71,6 +71,7 @@ namespace Dreamteck.Splines.Editor
                 pos = SplineEditorHandles.FreeMoveRectangle(pos, HandleUtility.GetHandleSize(pos) * 0.1f);
                 if (pos != lastPos)
                 {
+                    MainPointModule.HoldInteraction();
                     changed = true;
                     pos = matrix.inverse.MultiplyPoint(pos);
                     pos.z = 0f;

@@ -69,6 +69,26 @@ namespace Dreamteck.Splines.Editor
 #endif
         }
 
+        public static void DrawPoint(Vector3 position, bool selected)
+        {
+            DrawPoint(position, selected, Color.white);
+        }
+
+        public static void DrawPoint(Vector3 position, bool selected, Color tintColor)
+        {
+            if (selected)
+            {
+                Handles.color = SplinePrefs.highlightColor * tintColor;
+                Handles.DrawSolidDisc(position, -SceneView.currentDrawingSceneView.camera.transform.forward, HandleUtility.GetHandleSize(position) * 0.16f);
+            }
+
+            Handles.color = SplinePrefs.outlineColor * tintColor;
+            Handles.DrawSolidDisc(position, -SceneView.currentDrawingSceneView.camera.transform.forward, HandleUtility.GetHandleSize(position) * 0.12f);
+            Handles.color = SplinePrefs.defaultColor * tintColor;
+            Handles.DrawSolidDisc(position, -SceneView.currentDrawingSceneView.camera.transform.forward, HandleUtility.GetHandleSize(position) * 0.09f);
+            Handles.color = Color.white;
+        }
+
         public static void DrawSolidSphere(Vector3 position, float radius)
         {
             Handles.SphereHandleCap(0, position, Quaternion.identity, radius, EventType.Repaint);
