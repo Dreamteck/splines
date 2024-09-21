@@ -1,5 +1,8 @@
 namespace Dreamteck.Splines
 {
+    using Codice.Client.BaseCommands;
+    using Unity.Plastic.Newtonsoft.Json.Linq;
+    using Unity.VisualScripting.YamlDotNet.Core.Tokens;
     using UnityEngine;
 
     [RequireComponent(typeof(MeshFilter))]
@@ -8,6 +11,7 @@ namespace Dreamteck.Splines
     public class MultiSplineSurfaceGenerator : MeshGenerator
     {
         public enum UVWrapMode { Clamp, UniformX, UniformY, Uniform }
+        public enum SubdivisionMode { CatmullRom, BSpline, Linear }
         public UVWrapMode uvWrapMode
         {
             get { return _uvWrapMode; }
@@ -29,6 +33,19 @@ namespace Dreamteck.Splines
                 if (value != _subdivisions)
                 {
                     _subdivisions = value;
+                    Rebuild();
+                }
+            }
+        }
+
+        public SubdivisionMode subdivisionMode
+        {
+            get { return _subdivisionMode; }
+            set
+            {
+                if (value != _subdivisionMode)
+                {
+                    _subdivisionMode = value;
                     Rebuild();
                 }
             }
@@ -116,7 +133,9 @@ namespace Dreamteck.Splines
         [HideInInspector]
         private UVWrapMode _uvWrapMode = UVWrapMode.Clamp;
         [SerializeField, HideInInspector, Min(1)]
-        private int _subdivisions = 1;
+        private int _subdivisions = 3;
+        [SerializeField, HideInInspector]
+        private SubdivisionMode _subdivisionMode;
         [SerializeField]
         [HideInInspector]
         private bool _automaticNormals = true;
@@ -129,6 +148,9 @@ namespace Dreamteck.Splines
         [SerializeField]
         [HideInInspector]
         private Spline[] _splines = new Spline[0];
+        [SerializeField]
+        [HideInInspector]
+        private bool _initializedInEditor = false;
 
         private int iterations => _subdivisions * _otherComputers.Length;
 
@@ -154,17 +176,37 @@ namespace Dreamteck.Splines
             base.Reset();
         }
 
+        private Spline.Type ModeToSplineType(SubdivisionMode mode)
+        {
+            switch (mode)
+            {
+                case SubdivisionMode.BSpline: return Spline.Type.BSpline; 
+                case SubdivisionMode.Linear: return Spline.Type.Linear;
+                default: return Spline.Type.CatmullRom;
+            }
+        }
+
 
         protected override void BuildMesh()
         {
-            if (sampleCount == 0) return;
-            if (_otherComputers.Length == 0) return;
-            if(_splines.Length != sampleCount)
+            if (sampleCount == 0 || _otherComputers.Length == 0)
+            {
+                AllocateMesh(0, 0);
+                return;
+            }
+
+            if (_splines.Length != sampleCount)
             {
                 _splines = new Spline[sampleCount];
                 for (int i = 0; i < _splines.Length; i++)
                 {
-                    _splines[i] = new Spline(Spline.Type.CatmullRom);
+                    _splines[i] = new Spline(ModeToSplineType(_subdivisionMode));
+                }
+            } else
+            {
+                for (int i = 0; i < _splines.Length; i++)
+                {
+                    _splines[i].type = ModeToSplineType(_subdivisionMode);
                 }
             }
 
