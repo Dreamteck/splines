@@ -4,7 +4,7 @@ namespace Dreamteck.Splines
 
     [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshRenderer))]
-    [AddComponentMenu("Dreamteck/Splines/Multi Spline Surface Generator")]
+    [AddComponentMenu("Dreamteck/Splines/Complex Surface Generator")]
     public class ComplexSurfaceGenerator : MeshGenerator
     {
         public enum UVWrapMode { Clamp, UniformX, UniformY, Uniform }
