@@ -1,3 +1,26 @@
+----- 3.0.6 -----
+SUPPORT: Official support for Unity 2023 and 6000
+
+FEATURE: Added two new 3D Collider generator components for Box and Capsule colliders
+FEATURE: Added a Complex Surface Generator component which is similar to NURBS
+FEATURE: Better readability for spline points
+
+FIX: Fixed drag selection and editor handles in Unity 2023 and 6
+FIX: Editing the spline modifiers in the scene no longer causes the spline editor to drag-select
+FIX: Fixed an event leak in the Object Bender component Editor
+FIX: Updated the SplineTracer transform module to work with Unity 2022+ physics - rigidbody velocity assigning happens only if the rigidbody is not kinematic
+
+
+<<<<<<COMMUNITY CONTRIBUTIONS>>>>>>
+FEATURE [Thycon/Kronoxis]: Added new "Point" object count mode added to the Object Controller - makes object count relative to the spline point count
+
+FIX [Thycon/Kronoxis]: Serialization fix for prefabs using the Object Controller component 
+FIX [Thycon/Kronoxis]: Prevented spline point deletion when the Alt button is pressed in the scene view
+FIX [Thycon/Kronoxis]: Fixed an issue with UV generation in the Spline Mesh component
+FIX [Thycon/Kronoxis]: Fixed inaccurate calculation of the out moved value in the Spline User API
+
+
+
 ----- 3.0.5 -----
 UX: Improved the Move tool UX in Bezier mode when a single point is selected. Clicking the inner point handle will toggle the tool for the point position and clicking the outer handle will toggle the tool for the tangents
 
