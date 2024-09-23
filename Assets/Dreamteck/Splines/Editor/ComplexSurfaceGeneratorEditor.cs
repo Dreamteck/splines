@@ -210,7 +210,7 @@ namespace Dreamteck.Splines
             Component[] components = spline.GetComponents<Component>();
             for (int i = components.Length-1; i >= 0; i--)
             {
-                if (components[i] is not SplineComputer && components[i] is not Transform)
+                if (!(components[i] is SplineComputer || components[i] is Transform))
                 {
                     DestroyImmediate(components[i]);
                 }
