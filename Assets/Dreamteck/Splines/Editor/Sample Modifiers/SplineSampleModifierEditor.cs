@@ -244,6 +244,7 @@
 
             bool changed = false;
             double value = start.floatValue;
+
             if (useClip)
             {
                 user.UnclipPercent(ref value);
@@ -256,6 +257,7 @@
 
             if (start.floatValue != value)
             {
+                MainPointModule.HoldInteraction();
                 start.floatValue = (float)value;
                 changed = true;
             }
@@ -270,8 +272,10 @@
             {
                 user.ClipPercent(ref value);
             }
+
             if (LocalToGlobalPercent(start.floatValue, end.floatValue, centerStart.floatValue) != value)
             {
+                MainPointModule.HoldInteraction();
                 centerStart.floatValue = GlobalToLocalPercent(start.floatValue, end.floatValue, (float)value);
                 changed = true;
             }
@@ -281,6 +285,8 @@
             {
                 user.UnclipPercent(ref value);
             }
+            
+
             SplineComputerEditorHandles.Slider(user.spline, ref value, user.spline.editorPathColor, "", SplineComputerEditorHandles.SplineSliderGizmo.Rectangle, 0.6f);
             if (useClip)
             {
@@ -288,6 +294,7 @@
             }
             if (LocalToGlobalPercent(start.floatValue, end.floatValue, centerEnd.floatValue) != value)
             {
+                MainPointModule.HoldInteraction();
                 centerEnd.floatValue = GlobalToLocalPercent(start.floatValue, end.floatValue, (float)value);
                 changed = true;
             }
@@ -298,6 +305,7 @@
             {
                 user.UnclipPercent(ref value);
             }
+
             SplineComputerEditorHandles.Slider(user.spline, ref value, user.spline.editorPathColor, "End", SplineComputerEditorHandles.SplineSliderGizmo.BackwardTriangle, 0.8f);
             if (useClip)
             {
@@ -305,7 +313,7 @@
             }
             if (end.floatValue != value)
             {
-                
+                MainPointModule.HoldInteraction();
                 end.floatValue = (float)value;
                 changed = true;
             }
@@ -320,6 +328,7 @@
                     user.UnclipPercent(ref value);
                 }
                 SplineComputerEditorHandles.Slider(user.spline, ref value, user.spline.editorPathColor, "", SplineComputerEditorHandles.SplineSliderGizmo.Circle, 0.4f);
+                
                 if (useClip)
                 {
                     user.ClipPercent(ref value);
@@ -327,7 +336,7 @@
 
                 if (value != lastValue)
                 {
-
+                    MainPointModule.HoldInteraction();
                     double delta = value - lastValue;
                     start.floatValue += (float)delta;
                     end.floatValue += (float)delta;

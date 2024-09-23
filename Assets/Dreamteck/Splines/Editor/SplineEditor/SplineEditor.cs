@@ -105,7 +105,7 @@ namespace Dreamteck.Splines.Editor
             {
                 if (_splineProperty == null)
                 {
-                    _splineProperty = serializedObject.FindProperty(element);
+                    _splineProperty = _serializedObject.FindProperty(element);
                     continue;
                 }
                 int i = 0;
@@ -199,7 +199,7 @@ namespace Dreamteck.Splines.Editor
 
         public virtual void GetPointsFromSpline()
         {
-            serializedObject.Update();
+            _serializedObject.Update();
             if (points.Length != _pointsProperty.arraySize)
             {
                 points = new SerializedSplinePoint[_pointsProperty.arraySize];
@@ -213,7 +213,7 @@ namespace Dreamteck.Splines.Editor
 
         public virtual void ApplyModifiedProperties(bool forceAllUpdate = false)
         {
-            serializedObject.ApplyModifiedProperties();
+            _serializedObject.ApplyModifiedProperties();
         }
 
         public virtual void SetPreviewPoints(SplinePoint[] points)
@@ -243,7 +243,7 @@ namespace Dreamteck.Splines.Editor
         public void SetPointsCount(int count)
         {
             _pointsProperty.arraySize = count;
-            serializedObject.ApplyModifiedProperties();
+            _serializedObject.ApplyModifiedProperties();
             GetPointsFromSpline();
         }
 
@@ -258,8 +258,8 @@ namespace Dreamteck.Splines.Editor
         {
             _pointsProperty.InsertArrayElementAtIndex(index);
 
-            serializedObject.ApplyModifiedProperties();
-            serializedObject.Update();
+            _serializedObject.ApplyModifiedProperties();
+            _serializedObject.Update();
 
             if (points.Length != _pointsProperty.arraySize)
             {
@@ -974,7 +974,7 @@ namespace Dreamteck.Splines.Editor
 
         public void LoopTriggerProperties(System.Action<SerializedProperty> onTrigger)
         {
-            SerializedProperty triggerGroups = serializedObject.FindProperty("triggerGroups");
+            SerializedProperty triggerGroups = _serializedObject.FindProperty("triggerGroups");
 
             for (int i = 0; i < triggerGroups.arraySize; i++)
             {

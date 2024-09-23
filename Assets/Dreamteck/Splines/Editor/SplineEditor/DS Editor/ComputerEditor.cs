@@ -239,7 +239,7 @@ namespace Dreamteck.Splines.Editor
                         curve.AddKey(new Keyframe(0, 0, 0, 0));
                         curve.AddKey(new Keyframe(1, 1, 0, 0));
                         for (int i = 0; i < _splines.Length; i++) _splines[i].customValueInterpolation = curve;
-                        serializedObject.Update();
+                        _serializedObject.Update();
                         _pathEditor.GetPointsFromSpline();
                         curveUpdate = true;
                     }
@@ -252,7 +252,7 @@ namespace Dreamteck.Splines.Editor
                     {
                         _customValueInterpolation.animationCurveValue = null;
                         for (int i = 0; i < _splines.Length; i++) _splines[i].customValueInterpolation = null;
-                        serializedObject.Update();
+                        _serializedObject.Update();
                         _pathEditor.GetPointsFromSpline();
                         curveUpdate = true;
                     }
@@ -266,7 +266,7 @@ namespace Dreamteck.Splines.Editor
                         curve.AddKey(new Keyframe(0, 0));
                         curve.AddKey(new Keyframe(1, 1));
                         for (int i = 0; i < _splines.Length; i++) _splines[i].customNormalInterpolation = curve;
-                        serializedObject.Update();
+                        _serializedObject.Update();
                         _pathEditor.GetPointsFromSpline();
                         curveUpdate = true;
                     }
@@ -279,7 +279,7 @@ namespace Dreamteck.Splines.Editor
                     {
                         _customNormalInterpolation.animationCurveValue = null;
                         for (int i = 0; i < _splines.Length; i++) _splines[i].customNormalInterpolation = null;
-                        serializedObject.Update();
+                        _serializedObject.Update();
                         _pathEditor.GetPointsFromSpline();
                         curveUpdate = true;
                     }

@@ -18,6 +18,7 @@ namespace Dreamteck.Splines
         public static SplineComputer.Space pointEditSpace = SplineComputer.Space.Local;
         public static Color defaultColor = Color.white;
         public static Color highlightColor = Color.white;
+        public static Color outlineColor = Color.black;
         public static Color highlightContentColor = new Color(1f, 1f, 1f, 0.95f);
         public static bool showPointNumbers = false;
         public static SplineComputer.Space defaultComputerSpace = SplineComputer.Space.Local;
@@ -67,6 +68,7 @@ namespace Dreamteck.Splines
             createPointColor = EditorGUILayout.ColorField("Default Color", createPointColor);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
+            outlineColor = EditorGUILayout.ColorField("Outline color", outlineColor);
             highlightColor = EditorGUILayout.ColorField("Highlight color", highlightColor);
             highlightContentColor = EditorGUILayout.ColorField("Highlight content color", highlightContentColor);
             duplicationDirection = (Spline.Direction)EditorGUILayout.EnumPopup("Duplicate Direction", duplicationDirection);
@@ -82,6 +84,7 @@ namespace Dreamteck.Splines
                 startInCreationMode = true;
                 defaultColor = Color.white;
                 highlightColor = new Color(0.0313f, 0.737f, 0.796f, 1f);
+                outlineColor = Color.Lerp(defaultColor, Color.black, 0.65f);
                 highlightContentColor = new Color(1f, 1f, 1f, 0.95f);
                 showPointNumbers = false;
                 defaultComputerSpace = SplineComputer.Space.Local;
@@ -104,6 +107,7 @@ namespace Dreamteck.Splines
             pointEditSpace = (SplineComputer.Space)EditorPrefs.GetInt("Dreamteck.Splines.pointEditSpace", 1);
             defaultColor = LoadColor("Dreamteck.Splines.defaultColor", Color.white);
             highlightColor = LoadColor("Dreamteck.Splines.highlightColor", new Color(0f, 0.564f, 1f, 1f));
+            outlineColor = LoadColor("Dreamteck.Splines.outlineColor", Color.Lerp(defaultColor, Color.black, 0.65f));
             highlightContentColor = LoadColor("Dreamteck.Splines.highlightContentColor", new Color(1f, 1f, 1f, 0.95f));
             defaultComputerSpace = (SplineComputer.Space)EditorPrefs.GetInt("Dreamteck.Splines.defaultComputerSpace", 1);
             defaultType = (Spline.Type)EditorPrefs.GetInt("Dreamteck.Splines.defaultType", 0);
@@ -139,6 +143,7 @@ namespace Dreamteck.Splines
             EditorPrefs.SetInt("Dreamteck.Splines.pointEditSpace", (int)pointEditSpace);
             EditorPrefs.SetString("Dreamteck.Splines.defaultColor", defaultColor.r+ ":" + defaultColor.g+ ":" + defaultColor.b+ ":" + defaultColor.a);
             EditorPrefs.SetString("Dreamteck.Splines.highlightColor", highlightColor.r + ":" + highlightColor.g + ":" + highlightColor.b + ":" + highlightColor.a);
+            EditorPrefs.SetString("Dreamteck.Splines.outlineColor", outlineColor.r + ":" + outlineColor.g + ":" + outlineColor.b + ":" + outlineColor.a);
             EditorPrefs.SetString("Dreamteck.Splines.highlightContentColor", highlightContentColor.r + ":" + highlightContentColor.g + ":" + highlightContentColor.b + ":" + highlightContentColor.a);
             EditorPrefs.SetInt("Dreamteck.Splines.defaultComputerSpace", (int)defaultComputerSpace);
             EditorPrefs.SetInt("Dreamteck.Splines.defaultType", (int)defaultType);

@@ -1,9 +1,7 @@
 namespace Dreamteck.Splines.Editor
 {
-    using System.Collections;
-    using System.Collections.Generic;
-    using UnityEngine;
     using UnityEditor;
+    using UnityEngine;
 
     public class SplineEditorBase
     {
@@ -23,12 +21,12 @@ namespace Dreamteck.Splines.Editor
 
         private bool _gizmosEnabled = true;
 
-        protected readonly SerializedObject serializedObject;
+        protected readonly SerializedObject _serializedObject;
 
         public SplineEditorBase(SerializedObject serializedObject)
         {
             Load();
-            this.serializedObject = serializedObject;
+            this._serializedObject = serializedObject;
             eventModule = new EditorGUIEvents();
         }
 
