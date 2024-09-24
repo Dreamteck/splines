@@ -140,7 +140,6 @@ namespace Dreamteck.Splines
             if (motionType == MotionType.FollowBackward || motionType == MotionType.FollowForward || motionType == MotionType.None)
             {
                 Evaluate(_controllers[index].GetSplinePercent(wrapMode, _particles[index], motionType), ref evalResult);
-                ModifySample(ref evalResult);
                 Vector3 resultRight = evalResult.right;
                 _particles[index].position = evalResult.position;
                 if (apply3DRotation)
@@ -188,7 +187,6 @@ namespace Dreamteck.Splines
                 case EmitPoint.Ordered: percent = expectedParticleCount > 0 ? (float)_birthIndex / expectedParticleCount : 0f;  break;
             }
             Evaluate(percent, ref evalResult);
-            ModifySample(ref evalResult);
             _controllers[index].startColor = _particles[index].startColor;
             _controllers[index].startPercent = percent;
 

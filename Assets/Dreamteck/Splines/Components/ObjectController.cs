@@ -786,7 +786,6 @@ namespace Dreamteck.Splines
                     Evaluate(percent, ref evalResult);
                 }
 
-                ModifySample(ref evalResult);
                 spawned[i].position = evalResult.position;
 
                 if (_applyScale)

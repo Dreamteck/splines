@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Dreamteck.Splines {
     [ExecuteInEditMode]
-    public class SplineUser : MonoBehaviour, ISerializationCallbackReceiver
+    public class SplineUser : MonoBehaviour, ISerializationCallbackReceiver, ISampleModifier
     {
         public enum UpdateMethod { Update, FixedUpdate, LateUpdate }
         [HideInInspector]
@@ -407,8 +407,8 @@ namespace Dreamteck.Splines {
         /// <param name="target">Sample to write to</param>
         public void GetSample(int index, ref SplineSample target)
         {
-            GetSampleRaw(index, ref _workSample);
-            ModifySample(ref _workSample, ref target);
+            GetSampleRaw(index, ref target);
+            ApplySampleModifiers(ref target);
         }
 
         /// <summary>
@@ -418,14 +418,14 @@ namespace Dreamteck.Splines {
         public void GetSampleWithAngleCompensation(int index, ref SplineSample target)
         {
             GetSampleRaw(index, ref target);
-            ModifySample(ref target, ref target);
-            if(index > 0 && index < sampleCount - 1)
+            ApplySampleModifiers(ref target);
+            if (index > 0 && index < sampleCount - 1)
             {
                 GetSampleRaw(index - 1, ref _workSample);
-                ModifySample(ref _workSample, ref _workSample);
+                ApplySampleModifiers(ref target);
                 Vector3 prev = target.position - _workSample.position;
                 GetSampleRaw(index + 1, ref _workSample);
-                ModifySample(ref _workSample, ref _workSample);
+                ApplySampleModifiers(ref target);
                 Vector3 next = _workSample.position - target.position;
                 target.size *= 1 / Mathf.Sqrt(Vector3.Dot(prev.normalized, next.normalized) * 0.5f + 0.5f);
             }
@@ -609,19 +609,8 @@ namespace Dreamteck.Splines {
         /// <summary>
         /// Applies the SplineUser modifiers to the provided sample
         /// </summary>
-        /// <param name="source">Original sample</param>
-        /// <param name="destination">Destination sample</param>
-        public void ModifySample(ref SplineSample source, ref SplineSample destination)
-        {
-            destination = source;
-            ModifySample(ref destination);
-        }
-
-        /// <summary>
-        /// Applies the SplineUser modifiers to the provided sample
-        /// </summary>
-        /// <param name="sample"></param>
-        public void ModifySample(ref SplineSample sample)
+        /// <param name="sample">The sample to modify</param>
+        public void ApplySampleModifiers(ref SplineSample sample)
         {
             ApplyModifier(_offsetModifier, ref sample);
             ApplyModifier(_rotationModifier, ref sample);
@@ -629,13 +618,26 @@ namespace Dreamteck.Splines {
             ApplyModifier(_sizeModifier, ref sample);
         }
 
+        public Vector3 GetModifiedSamplePosition(ref SplineSample sample)
+        {
+            if (_offsetModifier.hasKeys)
+            {
+                Vector2 offset = _offsetModifier.Evaluate(sample.percent);
+                return sample.position + sample.right * offset.x + sample.up * offset.y; ;
+            }
+            return sample.position;
+        }
+
         private void ApplyModifier(SplineSampleModifier modifier, ref SplineSample sample)
         {
+            if (!modifier.hasKeys) return;
             if (modifier.useClippedPercent)
             {
                 ClipPercent(ref sample.percent);
             }
+
             modifier.Apply(ref sample);
+
             if (modifier.useClippedPercent)
             {
                 UnclipPercent(ref sample.percent);
@@ -799,6 +801,7 @@ namespace Dreamteck.Splines {
         {
             _sampleCollection.Evaluate(UnclipPercent(percent), ref result);
             result.percent = DMath.Clamp01(percent);
+            ApplySampleModifiers(ref result);
         }
 
         public SplineSample Evaluate(double percent)
@@ -806,6 +809,7 @@ namespace Dreamteck.Splines {
             SplineSample result = new SplineSample();
             Evaluate(percent, ref result);
             result.percent = DMath.Clamp01(percent);
+            ApplySampleModifiers(ref result);
             return result;
         }
 
@@ -815,6 +819,7 @@ namespace Dreamteck.Splines {
             for (int i = 0; i < results.Length; i++)
             {
                 ClipPercent(ref results[i].percent);
+                ApplySampleModifiers(ref results[i]);
             }
         }
 
@@ -882,7 +887,7 @@ namespace Dreamteck.Splines {
         public virtual void Project(Vector3 position, ref SplineSample result, double from = 0.0, double to = 1.0)
         {
             if (_spline == null) return;
-            _sampleCollection.Project(position, _spline.pointCount, ref result, UnclipPercent(from), UnclipPercent(to));
+            _sampleCollection.Project(position, _spline.pointCount, ref result, UnclipPercent(from), UnclipPercent(to), this);
             ClipPercent(ref result.percent);
         }
 

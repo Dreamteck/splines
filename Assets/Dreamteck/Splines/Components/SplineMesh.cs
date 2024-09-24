@@ -21,7 +21,7 @@ namespace Dreamteck.Splines
 
         private Matrix4x4 _vertexMatrix = new Matrix4x4();
         private Matrix4x4 _normalMatrix = new Matrix4x4();
-        private SplineSample _lastResult = new SplineSample(), _modifiedResult = new SplineSample();
+        private SplineSample _lastResult = new SplineSample();
 
         protected override void Awake()
         {
@@ -196,7 +196,6 @@ namespace Dreamteck.Splines
             Vector3 finalScale = channel.NextPlaceScale();
 
             Evaluate(percent, ref evalResult);
-            ModifySample(ref evalResult);
             Vector3 originalNormal = evalResult.up;
             Vector3 originalRight = evalResult.right;
             Vector3 originalDirection = evalResult.forward;
@@ -259,34 +258,34 @@ namespace Dreamteck.Splines
                 {
                     Evaluate(DMath.Lerp(from, to, definition.vertexGroups[i].percent), ref evalResult);
                 }
-                ModifySample(ref evalResult, ref _modifiedResult);
-                Vector3 originalNormal = _modifiedResult.up;
-                Vector3 originalRight = _modifiedResult.right;
-                Vector3 originalDirection = _modifiedResult.forward;
+
+                Vector3 originalNormal = evalResult.up;
+                Vector3 originalRight = evalResult.right;
+                Vector3 originalDirection = evalResult.forward;
                 if (channel.overrideNormal)
                 {
-                    _modifiedResult.forward = Vector3.Cross(_modifiedResult.right, channel.customNormal);
-                    _modifiedResult.up = channel.customNormal;
+                    evalResult.forward = Vector3.Cross(evalResult.right, channel.customNormal);
+                    evalResult.up = channel.customNormal;
                 }
-                var customValues = channel.GetCustomExtrudeValues(_modifiedResult.percent);
+                var customValues = channel.GetCustomExtrudeValues(evalResult.percent);
                 Vector3 finalOffset = offset + channelOffset + (Vector3)customValues.Item1;
                 float finalRotation = rotation + channelRotation + customValues.Item2;
                 Vector3 finalScale = channelScale;
                 if (!channel.scaleModifier.useClippedPercent)
                 {
-                    UnclipPercent(ref _modifiedResult.percent);
+                    UnclipPercent(ref evalResult.percent);
                 }
-                Vector2 scaleMod = channel.scaleModifier.GetScale(_modifiedResult);
+                Vector2 scaleMod = channel.scaleModifier.GetScale(evalResult);
                 if (!channel.scaleModifier.useClippedPercent)
                 {
-                    ClipPercent(ref _modifiedResult.percent);
+                    ClipPercent(ref evalResult.percent);
                 }
                 finalScale.x *= customValues.Item3.x * scaleMod.x;
                 finalScale.y *= customValues.Item3.y * scaleMod.y;
                 finalScale.z = 1f;
-                float resultSize = _modifiedResult.size;
-                _vertexMatrix.SetTRS(_modifiedResult.position + originalRight * (finalOffset.x * resultSize) + originalNormal * (finalOffset.y * resultSize) + originalDirection * offset.z, //Position
-                    _modifiedResult.rotation * Quaternion.AngleAxis(finalRotation, Vector3.forward), //Rotation
+                float resultSize = evalResult.size;
+                _vertexMatrix.SetTRS(evalResult.position + originalRight * (finalOffset.x * resultSize) + originalNormal * (finalOffset.y * resultSize) + originalDirection * offset.z, //Position
+                    evalResult.rotation * Quaternion.AngleAxis(finalRotation, Vector3.forward), //Rotation
                     finalScale * resultSize); //Scale
                 _normalMatrix = _vertexMatrix.inverse.transpose;
                 if (i == 0)
@@ -302,16 +301,16 @@ namespace Dreamteck.Splines
                     target.vertices[index] = _vertexMatrix.MultiplyPoint3x4(trsVector);
                     trsVector = definition.normals[index];
                     target.normals[index] = _normalMatrix.MultiplyVector(trsVector);
-                    target.colors[index] = target.colors[index] * _modifiedResult.color * color;
+                    target.colors[index] = target.colors[index] * evalResult.color * color;
                     if (target.uv.Length > index)
                     {
                         uv = target.uv[index];
                         switch (channel.overrideUVs)
                         {
-                            case Channel.UVOverride.ClampU: uv.x = (float)_modifiedResult.percent; break;
-                            case Channel.UVOverride.ClampV: uv.y = (float)_modifiedResult.percent; break;
-                            case Channel.UVOverride.UniformU: uv.x = CalculateLength(0.0, _modifiedResult.percent); break;
-                            case Channel.UVOverride.UniformV: uv.y = CalculateLength(0.0, _modifiedResult.percent); break;
+                            case Channel.UVOverride.ClampU: uv.x = (float)evalResult.percent; break;
+                            case Channel.UVOverride.ClampV: uv.y = (float)evalResult.percent; break;
+                            case Channel.UVOverride.UniformU: uv.x = CalculateLength(0.0, evalResult.percent); break;
+                            case Channel.UVOverride.UniformV: uv.y = CalculateLength(0.0, evalResult.percent); break;
                         }
                         target.uv[index] = new Vector2(uv.x * uvScale.x * channel.uvScale.x, uv.y * uvScale.y * channel.uvScale.y);
                         target.uv[index] += uvOffset + channel.uvOffset;

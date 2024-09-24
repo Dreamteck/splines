@@ -20,6 +20,7 @@ namespace Dreamteck.Splines
             }
         }
 
+        public override bool hasKeys => keys.Length > 0;
         public RotationKey[] keys = new RotationKey[0];
 
         public RotationModifier()

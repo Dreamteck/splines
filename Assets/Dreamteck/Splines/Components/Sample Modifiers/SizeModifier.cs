@@ -16,6 +16,8 @@
             {
             }
         }
+
+        public override bool hasKeys => keys.Length > 0;
         public SizeKey[] keys = new SizeKey[0];
 
         public SizeModifier()

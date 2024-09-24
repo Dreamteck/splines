@@ -8,6 +8,8 @@ namespace Dreamteck.Splines
         [HideInInspector]
         [UnityEngine.Serialization.FormerlySerializedAs("samples")]
         public SplineSample[] samples = new SplineSample[0];
+        private static bool __useModifier = false;
+        private static ISampleModifier __modifier = null;
 
         public int length
         {
@@ -422,6 +424,12 @@ namespace Dreamteck.Splines
             return Travel(start, distance, direction, out moved);
         }
 
+        private Vector3 GetModifiedPosition(ref SplineSample sample)
+        {
+            if (!__useModifier) return sample.position;
+            return __modifier.GetModifiedSamplePosition(ref sample);
+        }
+
         /// <summary>
         /// Same as Spline.Project but the point is transformed by the computer's transform.
         /// </summary>
@@ -432,7 +440,7 @@ namespace Dreamteck.Splines
         /// <param name="mode">Mode to use the method in. Cached uses the cached samples while Calculate is more accurate but heavier</param>
         /// <param name="subdivisions">Subdivisions for the Calculate mode. Don't assign if not using Calculated mode.</param>
         /// <returns></returns>
-        public void Project(Vector3 position, int controlPointCount, ref SplineSample result, double from = 0.0, double to = 1.0)
+        public void Project(Vector3 position, int controlPointCount, ref SplineSample result, double from = 0.0, double to = 1.0, ISampleModifier modifier = null)
         {
             if (!hasSamples) return;
             if (samples.Length == 1)
@@ -440,12 +448,15 @@ namespace Dreamteck.Splines
                 result.FastCopy(ref samples[0]);
                 return;
             }
+            __useModifier = modifier != null;
+            __modifier = modifier;
             Spline.FormatFromTo(ref from, ref to);
             //First make a very rough sample of the from-to region
             int steps = (controlPointCount - 1) * 4; //Sampling four points per segment is enough to find the closest point range
             int step = samples.Length / steps;
             if (step < 1) step = 1;
-            float minDist = (position - samples[0].position).sqrMagnitude;
+
+            float minDist = (position - GetModifiedPosition(ref samples[0])).sqrMagnitude;
             int fromIndex = 0;
             int toIndex = samples.Length - 1;
             double lerp;
@@ -462,7 +473,9 @@ namespace Dreamteck.Splines
             for (int i = fromIndex; i < toIndex; i += step)
             {
                 if (i >= toIndex) i = toIndex-1;
-                Vector3 projected = LinearAlgebraUtility.ProjectOnLine(samples[i].position, samples[Mathf.Min(i + step, toIndex)].position, position);
+                Vector3 pos1 = GetModifiedPosition(ref samples[i]);
+                Vector3 pos2 = GetModifiedPosition(ref samples[Mathf.Min(i + step, toIndex)]);
+                Vector3 projected = LinearAlgebraUtility.ProjectOnLine(pos1, pos2, position);
                 float dist = (position - projected).sqrMagnitude;
                 if (dist < minDist)
                 {
@@ -478,7 +491,7 @@ namespace Dreamteck.Splines
             //Find the closest result within the range
             for (int i = checkFrom + 1; i <= checkTo; i++)
             {
-                float dist = (position - samples[i].position).sqrMagnitude;
+                float dist = (position - GetModifiedPosition(ref samples[i])).sqrMagnitude;
                 if (dist < minDist)
                 {
                     minDist = dist;
@@ -490,12 +503,17 @@ namespace Dreamteck.Splines
             if (backIndex < 0) backIndex = 0;
             int frontIndex = index + 1;
             if (frontIndex > samples.Length - 1) frontIndex = samples.Length - 1;
-            Vector3 back = LinearAlgebraUtility.ProjectOnLine(samples[backIndex].position, samples[index].position, position);
-            Vector3 front = LinearAlgebraUtility.ProjectOnLine(samples[index].position, samples[frontIndex].position, position);
-            float backLength = (samples[index].position - samples[backIndex].position).magnitude;
-            float frontLength = (samples[index].position - samples[frontIndex].position).magnitude;
-            float backProjectDist = (back - samples[backIndex].position).magnitude;
-            float frontProjectDist = (front - samples[frontIndex].position).magnitude;
+
+            Vector3 backPos = GetModifiedPosition(ref samples[backIndex]);
+            Vector3 currentPos = GetModifiedPosition(ref samples[index]);
+            Vector3 frontPos = GetModifiedPosition(ref samples[frontIndex]);
+
+            Vector3 back = LinearAlgebraUtility.ProjectOnLine(backPos, currentPos, position);
+            Vector3 front = LinearAlgebraUtility.ProjectOnLine(currentPos, frontPos, position);
+            float backLength = (currentPos - backPos).magnitude;
+            float frontLength = (currentPos - frontPos).magnitude;
+            float backProjectDist = (back - backPos).magnitude;
+            float frontProjectDist = (front - frontPos).magnitude;
             if (backIndex < index && index < frontIndex)
             {
                 if ((position - back).sqrMagnitude < (position - front).sqrMagnitude)
@@ -520,15 +538,23 @@ namespace Dreamteck.Splines
                 if (sampleMode == SplineComputer.SampleMode.Uniform) result.percent = DMath.Lerp(GetSamplePercent(frontIndex), GetSamplePercent(index), frontProjectDist / frontLength);
             }
 
-            if (samples.Length > 1 && from == 0.0 && to == 1.0 && result.percent < samples[1].percent) //Handle looped splines
+            if (from == 0.0 && to == 1.0 && result.percent < samples[1].percent) //Handle looped splines
             {
-                Vector3 projected = LinearAlgebraUtility.ProjectOnLine(samples[samples.Length - 1].position, samples[samples.Length - 2].position, position);
+                Vector3 pos1 = GetModifiedPosition(ref samples[samples.Length - 1]);
+                Vector3 pos2 = GetModifiedPosition(ref samples[samples.Length - 2]);
+
+                Vector3 projected = LinearAlgebraUtility.ProjectOnLine(pos1, pos2, position);
                 if ((position - projected).sqrMagnitude < (position - result.position).sqrMagnitude)
                 {
-                    double l = LinearAlgebraUtility.InverseLerp(samples[samples.Length - 1].position, samples[samples.Length - 2].position, projected);
+                    double l = LinearAlgebraUtility.InverseLerp(pos1, pos2, projected);
                     SplineSample.Lerp(ref samples[samples.Length - 1], ref samples[samples.Length - 2], l, ref result);
                     if (sampleMode == SplineComputer.SampleMode.Uniform) result.percent = DMath.Lerp(GetSamplePercent(samples.Length - 1), GetSamplePercent(samples.Length - 2), l);
                 }
+            }
+
+            if (__useModifier)
+            {
+                modifier.ApplySampleModifiers(ref result);
             }
         }
 

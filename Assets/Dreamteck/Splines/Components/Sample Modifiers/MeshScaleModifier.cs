@@ -16,6 +16,8 @@
             {
             }
         }
+
+        public override bool hasKeys => keys.Count > 0;
         public List<ScaleKey> keys = new List<ScaleKey>();
 
         public MeshScaleModifier()

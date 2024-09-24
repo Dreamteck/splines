@@ -189,7 +189,7 @@ namespace Dreamteck.Splines.Editor
             if (user == null) return;
             if (Application.isPlaying)
             {
-                if (!user.follow) DrawResult(user.modifiedResult);
+                if (!user.follow) DrawResult(user.result);
                 return;
             }
             if (user.spline == null) return;

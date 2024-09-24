@@ -5,6 +5,9 @@ FEATURE: Added two new 3D Collider generator components for Box and Capsule coll
 FEATURE: Added a Complex Surface Generator component which is similar to NURBS
 FEATURE: Better readability for spline points
 
+API: The SplineUser.Evaluate method now returns the samples, modified by the sample modifiers
+API: The SplineUser.Project method now operates on the modified samples
+
 FIX: Fixed drag selection and editor handles in Unity 2023 and 6
 FIX: Editing the spline modifiers in the scene no longer causes the spline editor to drag-select
 FIX: Fixed an event leak in the Object Bender component Editor

@@ -1,6 +1,5 @@
 ﻿namespace Dreamteck.Splines
 {
-    using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
 
@@ -11,6 +10,8 @@
         [Range(0f, 1f)]
         public float blend = 1f;
         public bool useClippedPercent = false;
+
+        public virtual bool hasKeys => false;
 
         public virtual List<Key> GetKeys()
         {
@@ -113,10 +114,9 @@
                     double center = DMath.Lerp(_centerStart, _centerEnd, 0.5);
                     if (start > end)
                     {
-                        double pos = DMath.Lerp(_featherStart, _featherEnd, center);
                         double fromToEndDistance = 1.0 - _featherStart;
                         double centerDistance = center * (fromToEndDistance + _featherEnd);
-                        pos = _featherStart + centerDistance;
+                        double pos = _featherStart + centerDistance;
                         if (pos > 1.0) pos -= 1.0;
                         return pos;
                     }
@@ -169,7 +169,7 @@
                 t = (float)GlobalToLocalPercent(t);
                 if (t < _centerStart)
                 {
-                    return interpolation.Evaluate((float)t / (float)_centerStart) * blend;
+                    return interpolation.Evaluate((float)(t / _centerStart)) * blend;
                 }
 
                 if (t > _centerEnd)
