@@ -34,6 +34,8 @@ namespace Dreamteck.Splines.Editor
             SerializedProperty projectTarget = serializedObject.FindProperty("_projectTarget");
             SerializedProperty targetObject = serializedObject.FindProperty("_targetObject");
             SerializedProperty autoProject = serializedObject.FindProperty("_autoProject");
+            SerializedProperty wrapCutoff = serializedObject.FindProperty("_wrapCutoff");
+            SerializedProperty loopSamples = serializedObject.FindProperty("_loopSamples");
 
 
             EditorGUI.BeginChangeCheck();
@@ -48,6 +50,11 @@ namespace Dreamteck.Splines.Editor
 
             GUI.color = Color.white;
             EditorGUILayout.PropertyField(autoProject, new GUIContent("Auto Project"));
+
+            if (loopSamples.boolValue)
+            {
+                EditorGUILayout.PropertyField(wrapCutoff, new GUIContent("Wrap Cutoff", "When the jump in percent between two frames exceeds this value, the projector is considered wrapping (looping from end to start, or start to end)"));
+            }
 
             info = EditorGUILayout.Foldout(info, "Info");
             SerializedProperty percent = serializedObject.FindProperty("_result").FindPropertyRelative("percent");

@@ -92,6 +92,18 @@ namespace Dreamteck.Splines
             }
         }
 
+        public float wrapCutoff
+        {
+            get
+            {
+                return _wrapCutoff;
+            }
+            set
+            {
+                _wrapCutoff = value;
+            }
+        }
+
         [SerializeField]
         [HideInInspector]
         private Mode _mode = Mode.Cached;
@@ -120,6 +132,11 @@ namespace Dreamteck.Splines
         [SerializeField]
         [HideInInspector]
         public Vector3 _rotationOffset = Vector3.zero;
+
+        [SerializeField]
+        [HideInInspector]
+        [Range(0, 1)]
+        private float _wrapCutoff = 0.8f;
 
         public event SplineReachHandler onEndReached;
         public event SplineReachHandler onBeginningReached;
@@ -208,29 +225,45 @@ namespace Dreamteck.Splines
             double lastPercent = _result.percent;
             Project();
 
-            if (onBeginningReached != null && _result.percent <= clipFrom)
+            if (samplesAreLooped)
             {
-                if (!Mathf.Approximately((float)lastPercent, (float)_result.percent))
+                if (_result.percent <= clipFrom)
                 {
-                    onBeginningReached();
-                    if (samplesAreLooped)
+                    if (!Mathf.Approximately((float)lastPercent, (float)_result.percent))
                     {
+                        if (onBeginningReached != null) onBeginningReached();
                         CheckTriggers(lastPercent, 0.0);
                         CheckNodes(lastPercent, 0.0);
                         lastPercent = 1.0;
                     }
                 }
-            }
-            else if (onEndReached != null && _result.percent >= clipTo)
-            {
-                if (!Mathf.Approximately((float)lastPercent, (float)_result.percent))
+                else if (_result.percent >= clipTo)
                 {
-                    onEndReached();
-                    if (samplesAreLooped)
+                    if (!Mathf.Approximately((float)lastPercent, (float)_result.percent))
+                    {
+                        if (onEndReached != null) onEndReached();
+                        CheckTriggers(lastPercent, 1.0);
+                        CheckNodes(lastPercent, 1.0);
+                        lastPercent = 0.0;
+                    }
+                }
+            } 
+            else if (loopSamples)
+            {
+                bool wrapped = DMath.Abs(lastPercent - _result.percent) > _wrapCutoff;
+                if (wrapped)
+                {
+                    if (_result.percent < lastPercent)
                     {
                         CheckTriggers(lastPercent, 1.0);
                         CheckNodes(lastPercent, 1.0);
                         lastPercent = 0.0;
+                    }
+                    else
+                    {
+                        CheckTriggers(lastPercent, 0.0);
+                        CheckNodes(lastPercent, 0.0);
+                        lastPercent = 1.0;
                     }
                 }
             }
