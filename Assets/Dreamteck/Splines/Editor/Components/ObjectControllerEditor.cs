@@ -19,6 +19,7 @@ namespace Dreamteck.Splines.Editor
             SerializedProperty retainPrefabInstancesInEditor = serializedObject.FindProperty("_retainPrefabInstancesInEditor");
             SerializedProperty spawnMethod = serializedObject.FindProperty("_spawnMethod");
             SerializedProperty spawnCount = serializedObject.FindProperty("_spawnCount");
+            SerializedProperty spawnDistance = serializedObject.FindProperty("_spawnDistance");
             SerializedProperty delayedSpawn = serializedObject.FindProperty("delayedSpawn");
             SerializedProperty spawnDelay = serializedObject.FindProperty("spawnDelay");
             SerializedProperty iteration = serializedObject.FindProperty("_iteration");
@@ -135,6 +136,13 @@ namespace Dreamteck.Splines.Editor
                     if (hasObj) EditorGUILayout.PropertyField(spawnCount, new GUIContent("Spawn Count"));
                     else spawnCount.intValue = 0;
                     if (lastSpawnCount != spawnCount.intValue) objectsChanged = true;
+                }
+                else if (spawnMethod.intValue == (int)ObjectController.SpawnMethod.Distance)
+                {
+                    float lastSpawnDistance = spawnDistance.floatValue;
+                    if (hasObj) EditorGUILayout.PropertyField(spawnDistance, new GUIContent("Spawn Distance"));
+                    else spawnDistance.floatValue = 1f;
+                    if (lastSpawnDistance != spawnDistance.floatValue) objectsChanged = true;
                 }
                 EditorGUILayout.PropertyField(delayedSpawn, new GUIContent("Delayed Spawn"));
                 if (delayedSpawn.boolValue)
