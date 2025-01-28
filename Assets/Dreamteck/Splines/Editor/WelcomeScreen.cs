@@ -18,6 +18,7 @@ namespace Dreamteck.Splines.Editor
             if (open) return;
             bool showInfo = EditorPrefs.GetString("Dreamteck.Splines.Info.version", "") != version;
 
+            // Run it on a different thread. It makes domain reload longer since it runs on InitializeOnLoad and is blocking
             if (!showInfo)
             {
                 var url = "https://dreamteck.io/plugins/splines/welcome.json";
