@@ -208,9 +208,14 @@ namespace Dreamteck.Splines.Editor
                         SplinePrefs.SavePrefs();
                     }
                 }
-                else if (_pathEditor.lastEditorTool != Tool.None && Tools.current == Tool.None)
+                else 
                 {
-                    Tools.current = _pathEditor.lastEditorTool;
+                    // Always update the points as they are used in other editors
+                    _pathEditor.GetPointsFromSpline();
+                    if (_pathEditor.lastEditorTool != Tool.None && Tools.current == Tool.None)
+                    {
+                        Tools.current = _pathEditor.lastEditorTool;
+                    }
                 }
                 SplineEditorGUI.EndContainerBox();
             }
