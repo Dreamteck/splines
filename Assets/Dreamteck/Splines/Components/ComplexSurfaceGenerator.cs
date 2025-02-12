@@ -145,9 +145,12 @@ namespace Dreamteck.Splines
         [SerializeField]
         [HideInInspector]
         private Spline[] _splines = new Spline[0];
+#pragma warning disable 414
+        // Field is used in ComplexSurfaceGeneratorEditor
         [SerializeField]
         [HideInInspector]
         private bool _initializedInEditor = false;
+#pragma warning restore 414
 
         private int iterations => _subdivisions * _otherComputers.Length;
 
