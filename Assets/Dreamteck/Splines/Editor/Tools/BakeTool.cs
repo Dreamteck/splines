@@ -208,7 +208,11 @@ namespace Dreamteck.Splines.Editor
 
         private void Refresh()
         {
+#if UNITY_6000_0_OR_NEWER
+            found = Object.FindObjectsByType<MeshGenerator>(FindObjectsSortMode.None);
+#else
             found = Object.FindObjectsOfType<MeshGenerator>();
+#endif
         }
 
         void OnFocus()

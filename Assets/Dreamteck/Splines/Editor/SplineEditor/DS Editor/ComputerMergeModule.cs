@@ -47,7 +47,11 @@ namespace Dreamteck.Splines.Editor
 
         private void FindAvailableComputers()
         {
+#if UNITY_6000_0_OR_NEWER
+            SplineComputer[] found = Object.FindObjectsByType<SplineComputer>(FindObjectsSortMode.None);
+#else
             SplineComputer[] found = Object.FindObjectsOfType<SplineComputer>();
+#endif
             List<SplineComputer> available = new List<SplineComputer>();
             for (int i = 0; i < found.Length; i++)
             {

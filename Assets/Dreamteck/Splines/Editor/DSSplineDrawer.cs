@@ -46,7 +46,11 @@ namespace Dreamteck.Splines.Editor
         private static void FindComputers()
         {
             drawComputers.Clear();
+#if UNITY_6000_0_OR_NEWER
+            SplineComputer[] computers = GameObject.FindObjectsByType<SplineComputer>(FindObjectsSortMode.None);
+#else
             SplineComputer[] computers = GameObject.FindObjectsOfType<SplineComputer>();
+#endif
             drawComputers.AddRange(computers);
         }
 

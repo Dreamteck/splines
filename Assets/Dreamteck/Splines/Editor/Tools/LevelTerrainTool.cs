@@ -85,7 +85,11 @@ namespace Dreamteck.Splines
                 if (terrain == null)  terrain = Selection.gameObjects[i].GetComponent<Terrain>();
             }
 
+#if UNITY_6000_0_OR_NEWER
+            Terrain[] terrains = GameObject.FindObjectsByType<Terrain>(FindObjectsSortMode.None);
+#else
             Terrain[] terrains = GameObject.FindObjectsOfType<Terrain>();
+#endif
             if(terrains.Length == 1)
             {
                 //if there is only one terrain in the scene, automatically select it

@@ -39,7 +39,11 @@ namespace Dreamteck.Splines.Editor
         [MenuItem("GameObject/3D Object/Spline Computer")]
         private static void NewEmptySpline()
         {
+#if UNITY_6000_0_OR_NEWER
+            int count = GameObject.FindObjectsByType<SplineComputer>(FindObjectsSortMode.None).Length;
+#else
             int count = GameObject.FindObjectsOfType<SplineComputer>().Length;
+#endif
             string objName = "Spline";
             if (count > 0) objName += " " + count;
             GameObject obj = new GameObject(objName);
@@ -59,7 +63,11 @@ namespace Dreamteck.Splines.Editor
         [MenuItem("GameObject/3D Object/Spline Node")]
         private static void NewSplineNode()
         {
+#if UNITY_6000_0_OR_NEWER
+            int count = Object.FindObjectsByType<Node>(FindObjectsSortMode.None).Length;
+#else
             int count = Object.FindObjectsOfType<Node>().Length;
+#endif
             string objName = "Node";
             if (count > 0) objName += " " + count;
             GameObject obj = new GameObject(objName);
